@@ -1,0 +1,41 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_item_selector">
+
+    <!-- Tiêu đề -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Tiêu đề"
+        android:textSize="16sp"
+        android:textColor="#212121"/>
+
+    <!-- Giá trị hiển thị -->
+    <TextView
+        android:id="@+id/tvValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chưa thiết lập"
+        android:textColor="#757575"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Icon mũi tên -->
+    <ImageView
+        android:id="@+id/ivArrow"
+        android:layout_width="18dp"
+        android:layout_height="24dp"
+        android:contentDescription="Đi tới"
+        android:src="@drawable/ic_arrow_right"
+        app:tint="#9E9E9E" />
+</LinearLayout>

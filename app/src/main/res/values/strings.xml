@@ -1,0 +1,74 @@
+<resources>
+    <string name="hint_name">Họ và tên</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Mật khẩu</string>
+    <string name="btn_to_register">Chưa có tài khoản? Đăng ký ngay</string>
+
+    <string name="register_link">Chưa có tài khoản? Đăng ký ngay</string>
+
+    <string name="btn_products">Xem sản phẩm</string>
+    <string name="btn_profile">Thông tin cá nhân</string>
+
+    <string name="product_title">Danh sách sản phẩm</string>
+    <string name="product_name_default">Tên sản phẩm</string>
+    <string name="product_price_default">100000 VND</string>
+
+    <string name="profile_title">Thông tin cá nhân</string>
+    <string name="profile_name_placeholder">Sang</string>
+    <string name="profile_email_placeholder">sang@gmail.com</string>
+    <string name="profile_phone_placeholder">Số điện thoại: 0909 123 456</string>
+    <string name="profile_address_placeholder">Địa chỉ: 123 Lê Lợi, TP.HCM</string>
+
+
+    <string name="app_name">MyShop</string>
+
+    <!-- Common -->
+    <string name="btn_add_to_cart">Thêm vào giỏ</string>
+    <string name="btn_buy_now">Mua ngay</string>
+    <string name="btn_checkout">Thanh toán</string>
+    <string name="btn_remove">Xóa</string>
+    <string name="btn_logout">Đăng xuất</string>
+
+    <!-- Home -->
+    <string name="home_title">Trang chủ</string>
+    <string name="home_welcome">Chào mừng đến với MyShop</string>
+    <string name="home_search_hint">Tìm kiếm sản phẩm...</string>
+
+    <!-- Product -->
+    <string name="product_detail_title">Chi tiết sản phẩm</string>
+    <string name="product_price">Giá:</string>
+    <string name="product_description">Mô tả:</string>
+
+    <!-- Cart -->
+    <string name="cart_title">Giỏ hàng</string>
+    <string name="cart_empty">Giỏ hàng trống</string>
+    <string name="cart_total">Tổng tiền:</string>
+
+    <!-- Login/Register -->
+    <string name="login_title">Đăng nhập</string>
+    <string name="register_title">Đăng ký</string>
+    <string name="edt_email">Email</string>
+    <string name="edt_password">Mật khẩu</string>
+
+
+    <string name="account_title">Tài khoản</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="account_subtitle">Đăng nhập, cơ hội ưu đãi cho đơn đầu!</string>
+    <string name="account_orders">Đơn hàng của tôi</string>
+    <string name="view_all_orders">Xem tất cả đơn hàng</string>
+
+    <!-- Order status -->
+    <string name="order_wait_payment">Chờ thanh toán</string>
+    <string name="order_wait_shipping">Chờ vận chuyển</string>
+    <string name="order_wait_delivery">Chờ giao hàng</string>
+    <string name="order_wait_review">Chưa đánh giá</string>
+    <string name="order_return_cancel">Trả hàng &amp; Đã hủy</string>
+
+    <!-- Sections -->
+    <string name="my_channels">Kênh Của Tôi</string>
+    <string name="edit">Sửa</string>
+    <string name="see_all">Tất cả</string>
+
+    <string name="btn_settings">Cài đặt</string>
+</resources>

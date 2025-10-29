@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/rootLayout"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="#F9FAFB"
+    android:fitsSystemWindows="true"> <!-- Quan trọng: Giữ lại fitsSystemWindows ở đây -->
+
+    <!-- AppBarLayout để chứa Header và thanh Filter -->
+    <com.google.android.material.appbar.AppBarLayout android:id="@+id/appBarLayout"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:elevation="0dp"> <!-- Bỏ shadow mặc định của AppBarLayout -->
+
+        <!-- Header -->
+        <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/headerLayout"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="#1C2A44"
+            android:paddingTop="34dp"  <!-- Padding Top để đẩy nội dung xuống dưới status bar -->
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="10dp">
+
+        <EditText android:id="@+id/edtSearch" android:layout_width="0dp" android:layout_height="40dp"
+            android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@drawable/search_bg"
+            android:drawableLeft="@android:drawable/ic_menu_search" android:drawablePadding="6dp"
+            android:hint="Tìm kiếm sản phẩm" android:padding="10dp" android:textColor="#000"
+            android:textSize="14sp" app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnSearch" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button android:id="@+id/btnSearch" android:layout_width="wrap_content"
+            android:layout_height="40dp" android:backgroundTint="#FF6F00" android:minWidth="60dp"
+            android:text="Tìm" android:textColor="#FFF" android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Thanh filter ngang -->
+    <HorizontalScrollView android:id="@+id/filterScroll" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:scrollbars="none" android:background="#FFFFFF"
+        android:overScrollMode="never">
+        <!-- Nội dung bên trong HorizontalScrollView giữ nguyên -->
+        <LinearLayout android:id="@+id/layoutFilters" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:orientation="horizontal" android:divider="@drawable/divider_line"
+            android:showDividers="middle" android:dividerPadding="8dp" android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp">
+
+            <Button android:id="@+id/btnFilterAll" style="@style/FilterButtonStyle" android:text="Tất cả" />
+
+            <Button android:id="@+id/btnFilterNew" style="@style/FilterButtonStyle" android:text="Mới nhất" />
+
+            <Button android:id="@+id/btnFilterHot" style="@style/FilterButtonStyle" android:text="Bán chạy" />
+
+            <Button android:id="@+id/btnSortPrice" style="@style/FilterButtonStyle" android:text="Sắp xếp theo giá ▼" />
+
+            <Button android:id="@+id/btnCategory" style="@style/FilterButtonStyle" android:text="Danh mục ▼" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Nội dung chính (RecyclerView) -->
+<androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerSearchResults"
+android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false"
+android:padding="10dp" app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+
+    <!-- Bottom Navigation -->
+<com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottomNav"
+android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom"
+android:background="#FFFFFF" app:itemIconTint="@color/nav_item_color" app:itemTextColor="@color/nav_item_color"
+app:labelVisibilityMode="labeled" app:menu="@menu/bottom_nav_menu" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>

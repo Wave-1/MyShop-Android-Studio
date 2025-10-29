@@ -1,0 +1,4 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/sort_asc" android:title="Giá tăng dần" />
+    <item android:id="@+id/sort_desc" android:title="Giá giảm dần" />
+</menu>

@@ -1,0 +1,32 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme -->
+    <style name="Base.Theme.MyShop" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Màu chủ đạo (nếu bạn muốn thay đổi sau này) -->
+<!--         <item name="colorPrimary">@color/lightGrey</item>-->
+
+        <!-- Làm status bar trong suốt -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- Giữ cho status bar hiển thị -->
+        <item name="android:windowFullscreen">false</item>
+
+        <!-- Bật chế độ vẽ dưới system bar nhưng vẫn chừa vùng an toàn -->
+        <item name="android:windowTranslucentStatus">true</item>
+
+        <!-- Nền tổng thể của Activity -->
+        <item name="android:windowBackground">@color/white</item>
+
+        <!-- Đảm bảo thanh điều hướng không bị ẩn -->
+        <item name="android:windowLightStatusBar">false</item> <!-- false = chữ trắng -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Kế thừa theme này trong AndroidManifest -->
+    <style name="Theme.MyShop" parent="Base.Theme.MyShop" />
+
+    <style name="RatingBar" parent="Theme.AppCompat">
+        <item name="colorControlNormal">@color/lightGrey</item>
+        <item name="colorControlActivated">@color/yellow</item>
+    </style>
+</resources>

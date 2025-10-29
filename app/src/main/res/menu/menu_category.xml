@@ -1,0 +1,6 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/cat_phone" android:title="Điện thoại" />
+    <item android:id="@+id/cat_laptop" android:title="Laptop" />
+    <item android:id="@+id/cat_accessory" android:title="Phụ kiện" />
+    <item android:id="@+id/cat_home" android:title="Đồ gia dụng" />
+</menu>
