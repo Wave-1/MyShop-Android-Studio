@@ -48,7 +48,3 @@ MyShop là một ứng dụng thương mại điện tử (E-Commerce App) đư�
 | **Xử lý hình ảnh** | Glide |
 | **Môi trường phát triển** | Android Studio |
 
----
-
-## 📁 Cấu trúc thư mục
-
