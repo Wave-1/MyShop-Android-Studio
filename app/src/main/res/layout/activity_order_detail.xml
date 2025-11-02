@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    android:background="#F4F6F8">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title="Chi tiết đơn hàng"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        android:background="?attr/colorSurface"
+        app:elevation="4dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerOrderItems"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        tools:listitem="@layout/item_order_product_detail"/>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardElevation="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvDetailTotalAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:textColor="@color/holo_red_light"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:text="Tổng tiền: 72.500.000 ₫"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>
+    

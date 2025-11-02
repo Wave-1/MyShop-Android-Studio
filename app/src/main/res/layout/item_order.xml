@@ -1,38 +1,161 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    android:orientation="vertical"
-    android:padding="12dp">
-
-    <TextView
-        android:id="@+id/tvOrderId"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mã đơn: #12345"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp">
 
     <LinearLayout
-        android:id="@+id/layoutItems"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingVertical="4dp" />
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvOrderTotal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tổng tiền: 120.000 VNĐ"
-        android:textColor="@color/holo_red_light"
-        android:textSize="15sp" />
+        <!-- 1. Dòng Mã Đơn Hàng và Trạng Thái -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="6dp">
 
-    <TextView
-        android:id="@+id/tvOrderStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Trạng thái: Đang xử lý"
-        android:textColor="#2196F3"
-        android:textSize="15sp" />
-</LinearLayout>
+            <TextView
+                android:id="@+id/tvOrderId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                tools:text="Mã ĐH: #12345ABC" />
+
+            <TextView
+                android:id="@+id/tvOrderStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_order_status"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                tools:text="Đang xử lý" />
+        </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F0F0F0" />
+
+        <!-- 2. Dòng thông tin sản phẩm chính -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivProductImage"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
+                tools:src="@tools:sample/backgrounds/scenic" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvProductName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    tools:text="iPhone 15 Pro Max 256GB Chính hãng VN/A" />
+
+                <TextView
+                    android:id="@+id/tvProductPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#444444"
+                    android:textSize="14sp"
+                    tools:text="35.000.000 ₫" />
+
+                <TextView
+                    android:id="@+id/tvProductQuantity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="x 1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 3. Thông báo số lượng sản phẩm khác (nếu có) -->
+        <TextView
+            android:id="@+id/tvItemCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#F7F7F7"
+            android:gravity="center"
+            android:padding="6dp"
+            android:textColor="#666666"
+            android:textSize="13sp"
+            android:visibility="gone"
+            tools:text="và 2 sản phẩm khác"
+            tools:visibility="visible" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F0F0F0" />
+
+        <!-- 4. Dòng Tổng Tiền và Ngày Đặt -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp">
+
+            <TextView
+                android:id="@+id/tvOrderDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:textSize="12sp"
+                tools:text="29/10/2025" />
+
+            <TextView
+                android:id="@+id/tvTotalAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:textColor="@color/holo_red_light"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="72.500.000 ₫" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="4dp"
+                android:layout_toStartOf="@id/tvTotalAmount"
+                android:text="Tổng tiền:"
+                android:textSize="14sp" />
+        </RelativeLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

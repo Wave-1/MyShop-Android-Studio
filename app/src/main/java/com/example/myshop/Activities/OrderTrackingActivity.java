@@ -1,16 +1,22 @@
 package com.example.myshop.Activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myshop.Constants;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.Adapters.OrderAdapter;
 import com.example.myshop.R;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -20,66 +26,116 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderTrackingActivity extends AppCompatActivity {
-    ListView listOrders;
-    OrderAdapter orderAdapter;
-    List<OrderModel> orderList = new ArrayList<>();
-    Button btnProcessing, btnShipping, btnCompleted;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-    private View emptyLayout;
-    private String currentStatus = "Đang xử lý";
+    private RecyclerView recyclerOrders;
+    private ProgressBar progressBar;
+    private LinearLayout emptyLayout;
+    private MaterialToolbar toolbar;
+    Button btnProcessing, btnShipping, btnCompleted, btnCancelled;
+    private Button selectedButton;
+    private FirebaseFirestore db;
+    private OrderAdapter orderAdapter;
+    private List<OrderModel> orderList;
+    private String targetUserId;
+    private String currentStatus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_tracking);
 
-        listOrders = findViewById(R.id.listOrders);
+        toolbar = findViewById(R.id.toolbar);
+        recyclerOrders = findViewById(R.id.recyclerOrders);
+        progressBar = findViewById(R.id.progressBar);
         emptyLayout = findViewById(R.id.emptyLayout);
 
         btnProcessing = findViewById(R.id.btnProcessing);
         btnShipping = findViewById(R.id.btnShipping);
         btnCompleted = findViewById(R.id.btnCompleted);
+        btnCancelled = findViewById(R.id.btnCancelled);
 
+        db = FirebaseFirestore.getInstance();
+        orderList = new ArrayList<>();
+
+        String initialStatus = getIntent().getStringExtra(Constants.INTENT_KEY_ORDER_STATUS);
+
+        if (initialStatus == null) {
+            initialStatus = Constants.ORDER_STATUS_PROCESSING;
+        }
+
+        if (!determineTargetUser()) {
+            return;
+        }
+
+        filterOrdersByStatus(initialStatus, true);
+
+        setupToolbar();
+        setupRecyclerView();
+        setupFilterButtons();
+        loadOrders(currentStatus);
+
+    }
+
+    private void filterOrdersByStatus(String status, boolean isInitial) {
+        if (!isInitial && status.equals(currentStatus)) {
+            return;
+        }
+        currentStatus = status;
+        updateFilterButtons(status);
+        loadOrders(status);
+    }
+
+    private void updateFilterButtons(String activeStatus) {
+        btnProcessing.setSelected(Constants.ORDER_STATUS_PROCESSING.equals(activeStatus));
+        btnShipping.setSelected(Constants.ORDER_STATUS_SHIPPING.equals(activeStatus));
+        btnCompleted.setSelected(Constants.ORDER_STATUS_COMPLETED.equals(activeStatus));
+        btnCancelled.setSelected(Constants.ORDER_STATUS_CANCELLED.equals(activeStatus));
+    }
+
+    private boolean determineTargetUser() {
         String userIdAdmin = getIntent().getStringExtra("userId");
         String emailAdmin = getIntent().getStringExtra("userEmail");
-        String targetUserId;
         if (userIdAdmin != null) {
             setTitle("Đơn hàng của: " + emailAdmin);
             targetUserId = userIdAdmin;
-            loadOrders(targetUserId, currentStatus);
-            btnStatus(targetUserId);
         } else {
             if (FirebaseAuth.getInstance().getCurrentUser() == null) {
                 Toast.makeText(this, "Bạn cần đăng nhập để xem đơn hàng", Toast.LENGTH_SHORT).show();
                 finish();
-                return;
+                return false;
             }
             targetUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            loadOrders(targetUserId, currentStatus);
-            // Bộ lọc theo trạng thái
-            btnStatus(targetUserId);
         }
+        return true;
     }
 
-    private void btnStatus(String targetUserId) {
-        btnProcessing.setOnClickListener(v -> {
-            currentStatus = "Đang xử lý";
-            loadOrders(targetUserId,currentStatus);
-        });
+    private void setupFilterButtons() {
 
-        btnShipping.setOnClickListener(v -> {
-            currentStatus = "Đang giao";
-            loadOrders(targetUserId,currentStatus);
-        });
-
-        btnCompleted.setOnClickListener(v -> {
-            currentStatus = "Hoàn tất";
-            loadOrders(targetUserId,currentStatus);
-        });
+        btnProcessing.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_PROCESSING, false));
+        btnShipping.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_SHIPPING, false));
+        btnCompleted.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_COMPLETED, false));
+        btnCancelled.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_CANCELLED, false));
     }
 
-    private void loadOrders(String userId, String status) {
+    private void setupRecyclerView() {
+        orderAdapter = new OrderAdapter(this, (ArrayList<OrderModel>) orderList, order -> {
+            // Hành động khi người dùng click vào một đơn hàng: Mở trang chi tiết
+            Intent intent = new Intent(OrderTrackingActivity.this, OrderDetailActivity.class);
+            intent.putExtra("ORDER_DETAIL", order); // Đảm bảo OrderModel là Serializable
+            startActivity(intent);
+        });
+        recyclerOrders.setLayoutManager(new LinearLayoutManager(this));
+        recyclerOrders.setAdapter(orderAdapter);
+
+    }
+
+    private void setupToolbar() {
+        toolbar.setNavigationOnClickListener(v -> finish());
+    }
+
+    private void loadOrders(String status) {
+        showLoading(true);
         db.collection("users")
-                .document(userId)
+                .document(targetUserId)
                 .collection("orders")
                 .whereEqualTo("status", status)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -90,18 +146,34 @@ public class OrderTrackingActivity extends AppCompatActivity {
                         OrderModel order = doc.toObject(OrderModel.class);
                         orderList.add(order);
                     }
-                    if (orderList.isEmpty()) {
-                        listOrders.setVisibility(View.GONE);
-                        emptyLayout.setVisibility(View.VISIBLE);
-                    } else {
-                        listOrders.setVisibility(View.VISIBLE);
-                        emptyLayout.setVisibility(View.GONE);
-                        orderAdapter = new OrderAdapter(this, orderList);
-                        listOrders.setAdapter(orderAdapter);
-                    }
+                    orderAdapter.notifyDataSetChanged();
+                    showLoading(false);
+                    updateEmptyState();
 
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    showLoading(false);
+                    Toast.makeText(this, "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void updateEmptyState() {
+        if (orderList.isEmpty()) {
+            recyclerOrders.setVisibility(View.GONE);
+            emptyLayout.setVisibility(View.VISIBLE);
+        } else {
+            recyclerOrders.setVisibility(View.VISIBLE);
+            emptyLayout.setVisibility(View.GONE);
+        }
+    }
+
+    private void showLoading(boolean isLoading) {
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            recyclerOrders.setVisibility(View.GONE);
+            emptyLayout.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 }

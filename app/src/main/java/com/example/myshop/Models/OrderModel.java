@@ -1,8 +1,11 @@
 package com.example.myshop.Models;
 
-import java.util.List;
+import com.google.firebase.Timestamp;
 
-public class OrderModel {
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+public class OrderModel implements Serializable {
     private String orderId;
     private String userId;
     private String name;
@@ -10,9 +13,12 @@ public class OrderModel {
     private String phone;
     private double totalAmount;
     private String status;
-    private List<CartModel> items;
+    private ArrayList<CartModel> items;
+    private transient Timestamp timestamp;
+    private Date serializableTimestamp;
 
-    public OrderModel() {}
+    public OrderModel() {
+    }
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -42,16 +48,53 @@ public class OrderModel {
         this.status = status;
     }
 
-    public void setItems(List<CartModel> items) {
+    public void setItems(ArrayList<CartModel> items) {
         this.items = items;
     }
 
-    public String getOrderId() { return orderId; }
-    public String getUserId() { return userId; }
-    public String getName() { return name; }
-    public String getAddress() { return address; }
-    public String getPhone() { return phone; }
-    public double getTotalAmount() { return totalAmount; }
-    public String getStatus() { return status; }
-    public List<CartModel> getItems() { return items; }
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public Timestamp getTimestamp() {
+        if (timestamp == null && serializableTimestamp != null) {
+            return new Timestamp(serializableTimestamp);
+        }
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
+        if (timestamp != null) {
+            this.serializableTimestamp = timestamp.toDate();
+        }
+    }
+
+    public ArrayList<CartModel> getItems() {
+        return items;
+    }
 }

@@ -1,41 +1,35 @@
 package com.example.myshop.Activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.GridView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.myshop.Adapters.ChannelAdapter;
-import com.example.myshop.Models.ChannelModel;
+import com.example.myshop.Constants;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import java.util.ArrayList;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.imageview.ShapeableImageView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class AccountActivity extends AppCompatActivity {
 
-    Button btnLogin, btnRegister;
-    GridView gridChannels;
-    ArrayList<ChannelModel> channelList;
-    ChannelAdapter adapter;
-    ImageButton btnSettings;
-    ImageView imgAvatar;
-    TextView tvUsername;
-    LinearLayout layoutGuest, layoutUser, layoutPendingOrders;
-    BottomNavigationView bottomNav;
-
+    private BottomNavigationView bottomNav;
+    private LinearLayout layoutUser, layoutGuest;
+    private ShapeableImageView imgAvatar;
+    private TextView tvUsername, tvEditProfile;
+    private MaterialButton btnLogin, btnLogout;
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private static final int REQUEST_LOGIN = 100;
     private static final int REQUEST_REGISTER = 101;
 
@@ -44,135 +38,188 @@ public class AccountActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account);
 
-        btnLogin = findViewById(R.id.btnLogin);
-        btnRegister = findViewById(R.id.btnRegister);
-        gridChannels = findViewById(R.id.gridChannels);
-        btnSettings = findViewById(R.id.btnSettings);
+        bottomNav = findViewById(R.id.bottomNav);
+        layoutUser = findViewById(R.id.layoutUser);
+        layoutGuest = findViewById(R.id.layoutGuest);
         imgAvatar = findViewById(R.id.imgAvatar);
         tvUsername = findViewById(R.id.tvUsername);
-        layoutGuest = findViewById(R.id.layoutGuest);
-        layoutUser = findViewById(R.id.layoutUser);
-        layoutPendingOrders = findViewById(R.id.layoutPendingOrders);
-        bottomNav = findViewById(R.id.bottomNav);
-        layoutGuest.setVisibility(View.VISIBLE);
-        layoutUser.setVisibility(View.GONE);
+        tvEditProfile = findViewById(R.id.tvEditProfile);
+        btnLogin = findViewById(R.id.btnLogin);
+        btnLogout = findViewById(R.id.btnLogout);
 
-        // Né tai thỏ
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootLayoutAc), (v, insets) -> {
-            Insets statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars());
-            v.setPadding(0, statusBarInsets.top, 0, 0);
-            return insets;
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        View rootLayout = findViewById(R.id.rootLayout);
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
+            // Lấy khoảng trống của các thanh hệ thống (status bar, navigation bar)
+            int systemBarsInsetsTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            int systemBarsInsetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+
+            // Áp dụng padding cho layout gốc
+            v.setPadding(v.getPaddingLeft(), systemBarsInsetsTop, v.getPaddingRight(), systemBarsInsetsBottom);
+
+            // Trả về insets mặc định để các View con (như AppBarLayout) có thể tự xử lý
+            return WindowInsetsCompat.CONSUMED;
         });
 
-        // Kiểm tra SharedPreferences (nếu đã đăng nhập trước đó)
-        SharedPreferences prefs = getSharedPreferences("MyShop", MODE_PRIVATE);
-        String savedEmail = prefs.getString("email", null);
-        if (savedEmail != null) {
-            layoutGuest.setVisibility(View.GONE);
-            layoutUser.setVisibility(View.VISIBLE);
-            tvUsername.setText("Xin chào, " + savedEmail);
-            imgAvatar.setImageResource(R.drawable.ic_account);
-        }
+        updateUI();
+        setupClickListeners();
+        setupBottomNavigation();
 
-        btnLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
-            startActivityForResult(intent, REQUEST_LOGIN);
-        });
+    }
 
-        btnRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(AccountActivity.this, RegisterActivity.class);
-            startActivityForResult(intent, REQUEST_REGISTER);
-        });
-
-        btnSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(AccountActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
-
-        layoutPendingOrders.setOnClickListener(v -> {
-            Intent intent = new Intent(this, OrderTrackingActivity.class);
-            startActivity(intent);
-        });
-
-        // Danh sách kênh mẫu
-        channelList = new ArrayList<>();
-        channelList.add(new ChannelModel(R.drawable.ic_lazmall, "LazMall Sale"));
-        channelList.add(new ChannelModel(R.drawable.ic_coupon, "Tiết kiệm"));
-        channelList.add(new ChannelModel(R.drawable.ic_affiliate, "Affiliates"));
-        channelList.add(new ChannelModel(R.drawable.ic_live, "LazLive"));
-        channelList.add(new ChannelModel(R.drawable.ic_beauty, "LazMall"));
-        channelList.add(new ChannelModel(R.drawable.ic_partner, "Đối Tác"));
-
-        adapter = new ChannelAdapter(this, channelList);
-        gridChannels.setAdapter(adapter);
-        setGridViewHeightBasedOnChildren(gridChannels, 3);
-
-        // ✅ Gắn sự kiện Bottom Navigation
-        bottomNav.setSelectedItemId(R.id.nav_account); // Chọn tab Home mặc định
+    private void setupBottomNavigation() {
+        //  Gắn sự kiện Bottom Navigation
+        bottomNav.setSelectedItemId(R.id.nav_account);
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
-
+            Intent intent = null;
             if (id == R.id.nav_home) {
                 startActivity(new Intent(AccountActivity.this, HomeActivity.class));
+//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
+                return true;
+            } else if (id == R.id.nav_products) {
+                startActivity(new Intent(AccountActivity.this, ProductActivity.class));
+//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
                 return true;
             } else if (id == R.id.nav_cart) {
                 startActivity(new Intent(AccountActivity.this, CartActivity.class));
+//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
+                return true;
+            }
+            if (intent != null){
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
                 return true;
             } else if (id == R.id.nav_account) {
                 return true;
             }
-
             return false;
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (data == null) return;
+    private void setupClickListeners() {
+        btnLogin.setOnClickListener(v -> {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        });
 
-        if (requestCode == REQUEST_REGISTER && resultCode == RESULT_OK) {
-            // Nhận email từ RegisterActivity → mở LoginActivity
-            String email = data.getStringExtra("email");
-            if (email != null) {
-                Intent intent = new Intent(AccountActivity.this, LoginActivity.class);
-                intent.putExtra("email", email); // tự điền email
-                startActivityForResult(intent, REQUEST_LOGIN);
-            }
-        }
+        btnLogout.setOnClickListener(v -> {
+            mAuth.signOut();
+            Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
 
-        if (requestCode == REQUEST_LOGIN && resultCode == RESULT_OK) {
-            String username = data.getStringExtra("username");
-            if (username != null) {
-                // Lưu email vào SharedPreferences
-                SharedPreferences prefs = getSharedPreferences("MyShop", MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("email", username);
-                editor.apply();
+        tvEditProfile.setOnClickListener(v -> {
+            Toast.makeText(this, "Chức năng chỉnh sửa hồ sơ", Toast.LENGTH_SHORT).show();
+            // startActivity(new Intent(AccountActivity.this, EditProfileActivity.class));
+        });
 
-                layoutGuest.setVisibility(View.GONE);
-                layoutUser.setVisibility(View.VISIBLE);
-                tvUsername.setText("Xin chào, " + username);
-                imgAvatar.setImageResource(R.drawable.ic_account);
-            }
+        findViewById(R.id.layoutViewAllOrders).setOnClickListener(v -> {
+            Toast.makeText(this, "Xem tất cả đơn hàng", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(AccountActivity.this, OrderTrackingActivity.class));
+        });
+
+        // Đang xử lý
+        findViewById(R.id.status_processing).setOnClickListener(v -> {
+            openOrderTrackingActivity(Constants.ORDER_STATUS_PROCESSING);
+
+        });
+
+        // Chờ giao hàng
+        findViewById(R.id.status_shipping).setOnClickListener(v -> {
+            openOrderTrackingActivity(Constants.ORDER_STATUS_SHIPPING);
+
+        });
+
+        // Đã giao
+        findViewById(R.id.status_completed).setOnClickListener(v -> {
+            openOrderTrackingActivity(Constants.ORDER_STATUS_COMPLETED);
+
+        });
+
+        // Đánh giá
+        findViewById(R.id.reviews).setOnClickListener(v -> {
+//            openOrderTrackingActivity("Đang xử lý");
+            Toast.makeText(this, "Đánh giá", Toast.LENGTH_SHORT).show();
+        });
+
+
+        findViewById(R.id.option_address).setOnClickListener(v -> {
+            Toast.makeText(this, "Mở sổ địa chỉ", Toast.LENGTH_SHORT).show();
+        });
+
+        findViewById(R.id.option_support).setOnClickListener(v -> {
+            Toast.makeText(this, "Mở trung tâm hỗ trợ", Toast.LENGTH_SHORT).show();
+        });
+
+        findViewById(R.id.option_settings).setOnClickListener(v -> {
+            Toast.makeText(this, "Mở cài đặt", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void openOrderTrackingActivity(String status) {
+        Intent intent = new Intent(this, OrderTrackingActivity.class);
+        intent.putExtra(Constants.INTENT_KEY_ORDER_STATUS, status);
+        startActivity(intent);
+    }
+
+    private void updateUI() {
+        if (currentUser != null) {
+            layoutUser.setVisibility(View.VISIBLE);
+            btnLogout.setVisibility(View.VISIBLE);
+            layoutGuest.setVisibility(View.GONE);
+            loadUserProfile();
+        } else {
+            layoutUser.setVisibility(View.GONE);
+            btnLogout.setVisibility(View.GONE);
+            layoutGuest.setVisibility(View.VISIBLE);
         }
     }
 
-    public static void setGridViewHeightBasedOnChildren(GridView gridView, int columns) {
-        android.widget.ListAdapter adapter = gridView.getAdapter();
-        if (adapter == null) return;
-        int totalHeight = 0;
-        int items = adapter.getCount();
-        int rows = (int) Math.ceil((double) items / columns);
+    private void loadUserProfile() {
+        String uid = currentUser.getUid();
 
-        for (int i = 0; i < rows; i++) {
-            View listItem = adapter.getView(i, null, gridView);
-            listItem.measure(0, 0);
-            totalHeight += listItem.getMeasuredHeight();
-        }
+        db.collection("users")
+                .document(uid)
+                .collection("addresses")
+                .whereEqualTo("default", true)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    String nameFromAddress = null;
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // Lấy document địa chỉ đầu tiên tìm thấy
+                        nameFromAddress = queryDocumentSnapshots.getDocuments().get(0).getString("name");
+                    }
+                    if (nameFromAddress != null && !nameFromAddress.isEmpty()) {
+                        tvUsername.setText(nameFromAddress);
+                    } else {
+                        String displayName = currentUser.getDisplayName();
+                        if (displayName != null && !displayName.isEmpty()) {
+                            tvUsername.setText(displayName);
+                        } else {
+                            tvUsername.setText(currentUser.getEmail());
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Xảy ra lỗi khi truy vấn Firestore
+                    Toast.makeText(AccountActivity.this, "Lỗi tải thông tin cá nhân: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // Hiển thị thông tin dự phòng
+                    tvUsername.setText(currentUser.getEmail());
+                });
 
-        android.view.ViewGroup.LayoutParams params = gridView.getLayoutParams();
-        params.height = totalHeight + (gridView.getVerticalSpacing() * (rows - 1));
-        gridView.setLayoutParams(params);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bottomNav.setSelectedItemId(R.id.nav_account);
     }
 }

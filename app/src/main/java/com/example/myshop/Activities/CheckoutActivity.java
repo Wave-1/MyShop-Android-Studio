@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myshop.Constants;
 import com.example.myshop.Models.AddressModel;
 import com.example.myshop.Models.CartModel;
 import com.example.myshop.Adapters.CheckoutAdapter;
@@ -257,7 +258,7 @@ public class CheckoutActivity extends AppCompatActivity {
         orderData.put("items", checkoutList);
         orderData.put("totalAmount", totalAmount);
         orderData.put("timestamp", FieldValue.serverTimestamp()); // Dùng thời gian của server
-        orderData.put("status", "Đang xử lý");
+        orderData.put("status", Constants.ORDER_STATUS_PROCESSING);
         orderData.put("productIds", productIds);
 
         // THAO TÁC 1: Thêm việc TẠO ĐƠN HÀNG vào batch

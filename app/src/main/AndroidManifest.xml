@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"
@@ -16,30 +18,32 @@
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".Activities.RegisterActivity"/>
-        <activity android:name=".Activities.HomeActivity"/>
-        <activity android:name=".Activities.ProfileActivity"/>
-        <activity android:name=".Activities.AccountActivity"/>
-        <activity android:name=".Activities.LoginActivity"/>
-        <activity android:name=".Activities.SettingsActivity"/>
-        <activity android:name=".Activities.CartActivity"/>
-        <activity android:name=".Activities.ProductDetailActivity"/>
-        <activity android:name=".Activities.CheckoutActivity"/>
-        <activity android:name=".Activities.OrderTrackingActivity"/>
-        <activity android:name=".Activities.ProductActivity"/>
+        <activity android:name=".Activities.RegisterActivity" />
+        <activity android:name=".Activities.HomeActivity" />
+        <activity android:name=".Activities.ProfileActivity" />
+        <activity android:name=".Activities.AccountActivity" />
+        <activity android:name=".Activities.LoginActivity" />
+        <activity android:name=".Activities.SettingsActivity" />
+        <activity android:name=".Activities.CartActivity" />
+        <activity android:name=".Activities.ProductDetailActivity" />
+        <activity android:name=".Activities.CheckoutActivity" />
+        <activity android:name=".Activities.OrderTrackingActivity" />
+        <activity android:name=".Activities.ProductActivity" />
         <activity android:name=".Activities.ChangePasswordActivity" />
-
         <activity android:name=".Activities.AddressActivity" />
+        <activity android:name=".Activities.OrderDetailActivity" />
         <activity android:name=".Activities.AddEditAddressActivity" />
+
         <activity android:name=".Activities.ManageOrdersActivity" />
-        <activity android:name=".Activities.ManageUsersActivity"/>
-        <activity android:name=".Activities.ManageProductsActivity"/>
-        <activity android:name=".Activities.ManageCategoriesActivity"/>
+        <activity android:name=".Activities.ManageUsersActivity" />
+        <activity android:name=".Activities.ManageProductsActivity" />
+        <activity android:name=".Activities.ManageCategoriesActivity" />
+        <activity android:name=".Activities.AdminOrderDetailActivity" />
     </application>
 
 </manifest>

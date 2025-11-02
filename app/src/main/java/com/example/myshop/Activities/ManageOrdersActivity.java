@@ -1,20 +1,31 @@
 package com.example.myshop.Activities;
 
 import android.app.AlertDialog;
+import android.app.ComponentCaller;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myshop.Adapters.OrderAdapter;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
@@ -22,16 +33,19 @@ import java.util.List;
 
 public class ManageOrdersActivity extends AppCompatActivity {
 
-    private ListView listOrders;
-    private Button btnProcessing, btnShipping, btnCompleted;
-
-    private FirebaseFirestore db;
-    private List<OrderModel> orderList;
-    private List<String> orderNames;
-    private OrderAdapter orderAdapter;
+    private RecyclerView recyclerOrders;
+    private ProgressBar progressBar;
+    private TextView tvNoOrders;
     private BottomNavigationView bottomNav;
 
-    private String currentStatus = "Đang xử lý";
+    private Button btnAll, btnProcessing, btnShipping, btnCompleted, btnCancelled;
+    private Button selectedButton;
+    private List<Button> filterButtons = new ArrayList<>();
+    private FirebaseFirestore db;
+    private ArrayList<OrderModel> orderList;
+    private OrderAdapter orderAdapter;
+    private String currentStatus = "Tất cả";
+    private static final int UPDATE_ORDER_REQUEST_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,38 +53,68 @@ public class ManageOrdersActivity extends AppCompatActivity {
         setContentView(R.layout.activity_admin_orders);
 
         db = FirebaseFirestore.getInstance();
-        listOrders = findViewById(R.id.listOrders);
+        orderList = new ArrayList<>();
+
+        recyclerOrders = findViewById(R.id.recyclerOrders);
+        progressBar = findViewById(R.id.progressBar);
+        tvNoOrders = findViewById(R.id.tvNoOrders);
+        bottomNav = findViewById(R.id.bottomNav);
+
+        btnAll = findViewById(R.id.btnAll);
         btnProcessing = findViewById(R.id.btnProcessing);
         btnShipping = findViewById(R.id.btnShipping);
         btnCompleted = findViewById(R.id.btnCompleted);
-        bottomNav = findViewById(R.id.bottomNav);
-        orderList = new ArrayList<>();
+        btnCancelled = findViewById(R.id.btnCancelled);
 
-        // Load mặc định
+//        View rootLayout = findViewById(R.id.rootLayout);
+//
+//        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
+//            // Lấy khoảng trống của các thanh hệ thống (status bar, navigation bar)
+//            int systemBarsInsetsTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+//            int systemBarsInsetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+//
+//            // Áp dụng padding cho layout gốc
+//            v.setPadding(v.getPaddingLeft(), systemBarsInsetsTop, v.getPaddingRight(), systemBarsInsetsBottom);
+//
+//            // Trả về insets mặc định để các View con (như AppBarLayout) có thể tự xử lý
+//            return WindowInsetsCompat.CONSUMED;
+//        });
+        applyBottomNavigationPadding();
+        setupRecyclerView();
+        setupFilterButtons();
+        setupBottomNavigation();
+        selectButton(btnAll);
+
         loadOrders(currentStatus);
+    }
 
-        // Bộ lọc theo trạng thái
-        btnProcessing.setOnClickListener(v -> {
-            currentStatus = "Đang xử lý";
-            loadOrders(currentStatus);
+    private void applyBottomNavigationPadding() {
+        // Lấy ra BottomNavigationView và RecyclerView
+        bottomNav = findViewById(R.id.bottomNav);
+        recyclerOrders = findViewById(R.id.recyclerOrders);
+
+        // Đảm bảo các view không null
+        if (bottomNav == null || recyclerOrders == null) {
+            return;
+        }
+
+        // Post một hành động vào hàng đợi của View.
+        // Hành động này sẽ được thực thi sau khi layout đã được tính toán xong.
+        bottomNav.post(() -> {
+            // Lấy chiều cao thực tế của BottomNavigationView
+            int navHeight = bottomNav.getHeight();
+
+            // Lấy padding hiện tại của RecyclerView
+            int paddingLeft = recyclerOrders.getPaddingLeft();
+            int paddingTop = recyclerOrders.getPaddingTop();
+            int paddingRight = recyclerOrders.getPaddingRight();
+
+            // Gán lại padding, chỉ thay đổi paddingBottom
+            recyclerOrders.setPadding(paddingLeft, paddingTop, paddingRight, navHeight);
         });
+    }
 
-        btnShipping.setOnClickListener(v -> {
-            currentStatus = "Đang giao";
-            loadOrders(currentStatus);
-        });
-
-        btnCompleted.setOnClickListener(v -> {
-            currentStatus = "Hoàn tất";
-            loadOrders(currentStatus);
-        });
-
-        // Khi bấm vào 1 đơn hàng
-        listOrders.setOnItemClickListener((parent, view, position, id) -> {
-            OrderModel order = orderList.get(position);
-            showChangeStatusDialog(order);
-        });
-
+    private void setupBottomNavigation() {
         bottomNav.setSelectedItemId(R.id.nav_orders);
         // --- Bottom Navigation ---
         bottomNav.setOnItemSelectedListener(item -> {
@@ -94,49 +138,129 @@ public class ManageOrdersActivity extends AppCompatActivity {
         });
     }
 
+    // Bộ lọc theo trạng thái
+    private void setupFilterButtons() {
+        filterButtons.add(btnAll);
+        filterButtons.add(btnProcessing);
+        filterButtons.add(btnShipping);
+        filterButtons.add(btnCompleted);
+        filterButtons.add(btnCancelled);
+
+        btnAll.setOnClickListener(v -> {
+            selectButton(btnAll);
+            currentStatus = "Tất cả";
+            loadOrders(currentStatus);
+        });
+
+        btnProcessing.setOnClickListener(v -> {
+            selectButton(btnProcessing);
+            currentStatus = "Đang xử lý";
+            loadOrders(currentStatus);
+        });
+
+        btnShipping.setOnClickListener(v -> {
+            selectButton(btnShipping);
+            currentStatus = "Chờ giao hàng";
+            loadOrders(currentStatus);
+        });
+
+        btnCompleted.setOnClickListener(v -> {
+            selectButton(btnCompleted);
+            currentStatus = "Đã giao";
+            loadOrders(currentStatus);
+        });
+
+        btnCancelled.setOnClickListener(v -> {
+            selectButton(btnCancelled);
+            currentStatus = "Đã hủy";
+            loadOrders(currentStatus);
+        });
+
+    }
+
+    private void selectButton(Button btnToSelect) {
+        if (selectedButton != null) {
+            selectedButton.setSelected(false);
+        }
+        btnToSelect.setSelected(true);
+        selectedButton = btnToSelect;
+    }
+
+    private void setupRecyclerView() {
+        recyclerOrders.setLayoutManager(new LinearLayoutManager(this));
+        orderAdapter = new OrderAdapter(this, orderList, order -> {
+//            showChangeStatusDialog(order);
+            Intent intent = new Intent(this, AdminOrderDetailActivity.class);
+            intent.putExtra("ORDER_OBJECT", order);
+            startActivityForResult(intent, UPDATE_ORDER_REQUEST_CODE);
+        });
+        recyclerOrders.setAdapter(orderAdapter);
+    }
+
     private void loadOrders(String status) {
-        db.collectionGroup("orders")
-                .whereEqualTo("status", status)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    orderList.clear();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        OrderModel order = doc.toObject(OrderModel.class);
-                        orderList.add(order);
-                    }
+        progressBar.setVisibility(View.VISIBLE);
+        recyclerOrders.setVisibility(View.GONE);
+        tvNoOrders.setVisibility(View.GONE);
 
-                    if (orderList.isEmpty()) {
-                        Toast.makeText(this, "Không có đơn hàng ", Toast.LENGTH_SHORT).show();
-                    }
+        Query query = db.collectionGroup("orders");
+        if (!"Tất cả".equals(status)) {
+            query = query.whereEqualTo("status", status);
+        }
+        query = query.orderBy("timestamp", Query.Direction.DESCENDING);
 
-                    orderAdapter = new OrderAdapter(this, orderList);
-                    listOrders.setAdapter(orderAdapter);
-                })
-                .addOnFailureListener(e ->
-                        Log.e("loadOrders", "Lỗi tải đơn hàng: " + e.getMessage()));
-//                        Toast.makeText(this, "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+        query.get().addOnSuccessListener(queryDocumentSnapshots -> {
+            orderList.clear();
+            for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                OrderModel order = doc.toObject(OrderModel.class);
+                String oderId = doc.getId();
+                order.setOrderId(oderId);
+                orderList.add(order);
+            }
+            progressBar.setVisibility(View.GONE);
+            if (orderList.isEmpty()) {
+                tvNoOrders.setVisibility(View.VISIBLE);
+                recyclerOrders.setVisibility(View.GONE);
+            } else {
+                tvNoOrders.setVisibility(View.GONE);
+                recyclerOrders.setVisibility(View.VISIBLE);
+            }
+            orderAdapter.notifyDataSetChanged();
+        }).addOnFailureListener(e -> {
+            progressBar.setVisibility(View.GONE);
+            Log.e("loadOrders", "Lỗi tải đơn hàng: " + e.getMessage());
+        });
     }
 
     private void showChangeStatusDialog(OrderModel order) {
-        String[] statuses = {"Đang xử lý", "Đang giao", "Hoàn tất"};
+        if (order.getUserId() == null || order.getOrderId() == null) {
+            Toast.makeText(this, "Lỗi đơn hàng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] statuses = {"Đang xử lý", "Chờ giao hàng", "Đã giao", "Đã hủy"};
 
-        new AlertDialog.Builder(this)
-                .setTitle("Cập nhật trạng thái đơn hàng")
-                .setItems(statuses, (dialog, which) -> {
-                    String newStatus = statuses[which];
+        new AlertDialog.Builder(this).setTitle("Cập nhật trạng thái đơn hàng").setItems(statuses, (dialog, which) -> {
+            String newStatus = statuses[which];
 
-                    db.collection("users")
-                            .document(order.getUserId())
-                            .collection("orders")
-                            .document(order.getOrderId())
-                            .update("status", newStatus)
-                            .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
-                                loadOrders(currentStatus); // Reload lại list hiện tại
-                            })
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(this, "Lỗi cập nhật!", Toast.LENGTH_SHORT).show());
-                })
-                .show();
+            db.collection("users").document(order.getUserId()).collection("orders").document(order.getOrderId()).update("status", newStatus).addOnSuccessListener(aVoid -> {
+                Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+                order.setStatus(newStatus);
+                orderAdapter.notifyDataSetChanged();
+                loadOrders(currentStatus); // Reload lại list hiện tại
+            }).addOnFailureListener(e -> Toast.makeText(this, "Lỗi cập nhật!", Toast.LENGTH_SHORT).show());
+        }).show();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data, @NonNull ComponentCaller caller) {
+        super.onActivityResult(requestCode, resultCode, data, caller);
+        if (requestCode == UPDATE_ORDER_REQUEST_CODE) {
+            // 2. Kiểm tra xem kết quả trả về có phải là THÀNH CÔNG (OK) không
+            if (resultCode == RESULT_OK) {
+                // 3. Nếu đúng, có nghĩa là đơn hàng đã được cập nhật thành công
+                //    => Tải lại danh sách đơn hàng để cập nhật giao diện
+                Toast.makeText(this, "Đang làm mới danh sách đơn hàng...", Toast.LENGTH_SHORT).show();
+                loadOrders(currentStatus); // Gọi lại hàm loadOrders với bộ lọc hiện tại
+            }
+        }
     }
 }

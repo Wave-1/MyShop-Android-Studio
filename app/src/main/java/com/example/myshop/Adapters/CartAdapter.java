@@ -28,10 +28,11 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
-    private Context context;
-    private ArrayList<CartModel> cartList;
+    private final Context context;
+    private final ArrayList<CartModel> cartList;
     private FirebaseFirestore db;
     private String uid;
+    private final boolean isReadOnly;
 
     public interface OnTotalPriceUpdateListener {
         void onUpdate();
@@ -39,12 +40,19 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     private final OnTotalPriceUpdateListener totalPriceUpdateListener;
 
-    public CartAdapter(Context context, ArrayList<CartModel> cartList, OnTotalPriceUpdateListener listener) {
+    public CartAdapter(Context context, ArrayList<CartModel> cartList, boolean isReadOnly, OnTotalPriceUpdateListener listener) {
         this.context = context;
         this.cartList = cartList;
+        this.isReadOnly = isReadOnly;
         this.totalPriceUpdateListener = listener;
-        this.db = FirebaseFirestore.getInstance();
-        this.uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (!isReadOnly) {
+            this.db = FirebaseFirestore.getInstance();
+            this.uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        }
+    }
+
+    public CartAdapter(Context context, ArrayList<CartModel> cartList, OnTotalPriceUpdateListener listener) {
+        this(context, cartList, false, listener);
     }
 
     @NonNull
@@ -70,34 +78,44 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                 .error(R.drawable.store)
                 .into(holder.ivProductImage);
 
-        holder.cbSelectProduct.setChecked(item.isSelected());
-        holder.cbSelectProduct.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            item.setSelected(isChecked);
-            if (totalPriceUpdateListener != null){
-                totalPriceUpdateListener.onUpdate();
-            }
-        });
-
-
-        holder.btnIncrease.setOnClickListener(v -> {
-            int currentQuantity = item.getQuantity();
-            currentQuantity++;
-            updateQuantityInFirestore(item, currentQuantity, holder);
-        });
-
-        holder.btnDecrease.setOnClickListener(v -> {
-            int currentQuantity = item.getQuantity();
-            if (currentQuantity > 1) {
-                currentQuantity--;
+        if (isReadOnly) {
+            holder.cbSelectProduct.setVisibility(View.GONE);
+            holder.btnIncrease.setVisibility(View.GONE);
+            holder.btnDecrease.setVisibility(View.GONE);
+            holder.btnDelete.setVisibility(View.GONE);
+            holder.tvQuantity.setText("x " + item.getQuantity());
+        } else {
+            holder.cbSelectProduct.setVisibility(View.VISIBLE);
+            holder.btnIncrease.setVisibility(View.VISIBLE);
+            holder.btnDecrease.setVisibility(View.VISIBLE);
+            holder.btnDelete.setVisibility(View.VISIBLE);
+            holder.tvQuantity.setText("x " + item.getQuantity());
+            holder.cbSelectProduct.setChecked(item.isSelected());
+            holder.cbSelectProduct.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                item.setSelected(isChecked);
+                if (totalPriceUpdateListener != null) {
+                    totalPriceUpdateListener.onUpdate();
+                }
+            });
+            holder.btnIncrease.setOnClickListener(v -> {
+                int currentQuantity = item.getQuantity();
+                currentQuantity++;
                 updateQuantityInFirestore(item, currentQuantity, holder);
-            }else {
-                showDeleteConfirmationDialog(item, holder.getAdapterPosition());
-            }
-        });
-        holder.btnDelete.setOnClickListener(v -> {
-            showDeleteConfirmationDialog(item, holder.getAdapterPosition());
-        });
+            });
 
+            holder.btnDecrease.setOnClickListener(v -> {
+                int currentQuantity = item.getQuantity();
+                if (currentQuantity > 1) {
+                    currentQuantity--;
+                    updateQuantityInFirestore(item, currentQuantity, holder);
+                } else {
+                    showDeleteConfirmationDialog(item, holder.getAdapterPosition());
+                }
+            });
+            holder.btnDelete.setOnClickListener(v -> {
+                showDeleteConfirmationDialog(item, holder.getAdapterPosition());
+            });
+        }
     }
 
     private void showDeleteConfirmationDialog(CartModel item, int position) {
@@ -110,6 +128,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
                 .setNegativeButton("Hủy", null)
                 .show();
     }
+
     private void deleteItemFromFirestore(CartModel item, int position) {
         if (uid == null || position < 0 || position >= cartList.size()) return;
         db.collection("users")

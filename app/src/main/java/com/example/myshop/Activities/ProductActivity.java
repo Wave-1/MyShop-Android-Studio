@@ -65,7 +65,6 @@ public class ProductActivity extends AppCompatActivity {
         filterButtons.add(btnSortPrice);
         filterButtons.add(btnCategory);
 
-
         // Gán sự kiện click
         btnAll.setOnClickListener(v -> selectButton(btnAll));
         btnNew.setOnClickListener(v -> selectButton(btnNew));
@@ -206,6 +205,12 @@ public class ProductActivity extends AppCompatActivity {
         // Lần đầu load toàn bộ sản phẩm
         loadProducts();
         loadCategoryNames();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bottomNav.setSelectedItemId(R.id.nav_products);
     }
 
     private void loadCategoryNames() {

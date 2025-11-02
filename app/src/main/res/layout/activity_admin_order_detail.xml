@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F6F8"
+    tools:context=".Activities.AdminOrderDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="Chi tiết đơn hàng"
+            app:titleCentered="true" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Thông tin người mua -->
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thông tin khách hàng" />
+            <TextView
+                android:id="@+id/tvUserEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                tools:text="Email: customer@example.com" />
+            <TextView
+                android:id="@+id/tvAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                tools:text="Địa chỉ: 123 Đường ABC, Phường XYZ, Quận 1, TP. HCM" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="?android:attr/listDivider" />
+
+            <!-- Danh sách sản phẩm -->
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sản phẩm" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/item_cart"
+                tools:itemCount="2"
+                android:layout_marginTop="8dp"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Nút cập nhật ở dưới cùng -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnUpdateStatus"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:padding="14dp"
+        android:text="Cập nhật trạng thái"
+        android:textSize="16sp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

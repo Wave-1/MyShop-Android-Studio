@@ -58,7 +58,6 @@ public class CartActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-
         setupRecyclerView();
 
         loadCartFromFirestore();

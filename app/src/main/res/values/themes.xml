@@ -29,4 +29,54 @@
         <item name="colorControlNormal">@color/lightGrey</item>
         <item name="colorControlActivated">@color/yellow</item>
     </style>
+    <!-- Base Style cho các nút filter -->
+    <style name="FilterButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item> <!-- Chiều cao nhỏ hơn -->
+        <item name="android:textColor">#555555</item> <!-- Màu chữ khi không chọn -->
+        <item name="android:backgroundTint">#F0F0F0</item> <!-- Màu nền khi không chọn -->
+        <item name="android:textAllCaps">false</item>
+        <item name="strokeWidth">0dp</item> <!-- Bỏ viền -->
+        <item name="cornerRadius">20dp</item> <!-- Bo tròn -->
+    </style>
+
+    <!-- Style cho nút filter khi được chọn -->
+    <style name="FilterButton.Selected">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:backgroundTint">@color/purple_500</item> <!-- Màu nền khi được chọn -->
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="CleanFilterButton" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/filter_button_selector</item>
+        <item name="android:textColor">@color/filter_text_color_selector</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- <style name="CleanFilterButton" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/bg_filter_button_selector</item>
+        <item name="android:textColor">@color/textColor_filter_button_selector</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+    </style> -->
+
+<!--     <style name="CleanFilterButton" parent="Widget.Material3.Button.TextButton">-->
+<!--        <item name="android:layout_width">wrap_content</item>-->
+<!--        <item name="android:layout_height">40dp</item>-->
+<!--        <item name="android:background">@drawable/bg_filter_button_selector</item>-->
+<!--        <item name="android:textColor">@color/textcolor_filter_button_selector</item>-->
+<!--        <item name="android:textAllCaps">false</item>-->
+<!--        <item name="android:textSize">14sp</item>-->
+<!--    </style> -->
 </resources>

@@ -13,7 +13,7 @@
     <item
         android:id="@+id/nav_categories"
         android:icon="@drawable/ic_category"
-        android:title="Người dùng" />
+        android:title="Danh mục" />
 
     <item
         android:id="@+id/nav_orders"

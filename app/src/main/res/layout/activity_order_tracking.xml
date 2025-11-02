@@ -1,82 +1,115 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F4F6F8"
+    android:fitsSystemWindows="true"
+    tools:context=".Activities.OrderTrackingActivity">
 
-    <TextView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="1dp"
-        android:text="Theo dõi đơn hàng"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:background="?attr/colorSurface"
+        app:elevation="2dp">
 
-    <!-- Hàng nút trạng thái -->
-    <LinearLayout
-        android:id="@+id/layoutStatusButtons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="Theo dõi đơn hàng"
+            app:titleTextColor="@color/black" />
 
-        <Button
-            android:id="@+id/btnProcessing"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/filterScroll"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:backgroundTint="@color/holo_orange_light"
-            android:text="Đang xử lý"
-            android:textColor="@color/black" />
+            android:background="#FFFFFF"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-        <Button
-            android:id="@+id/btnShipping"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:backgroundTint="@color/holo_blue_light"
-            android:text="Đang giao"
-            android:textColor="@color/black" />
+            <LinearLayout
+                android:id="@+id/layoutStatusButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:divider="@drawable/divider_line"
+                android:dividerPadding="8dp"
+                android:orientation="horizontal"
+                android:paddingHorizontal="15.1dp"
+                android:paddingVertical="6dp"
+                android:showDividers="middle">
 
-        <Button
-            android:id="@+id/btnCompleted"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:backgroundTint="@color/holo_green_light"
-            android:text="Hoàn tất"
-            android:textColor="@color/black" />
-    </LinearLayout>
+                <Button
+                    android:id="@+id/btnProcessing"
+                    style="@style/CleanFilterButton"
+                    android:text="Đang xử lý" />
 
-    <ListView
-        android:id="@+id/listOrders"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingHorizontal="10dp"
-        android:paddingBottom="90dp"
-        android:scrollbars="vertical" />
+                <Button
+                    android:id="@+id/btnShipping"
+                    style="@style/CleanFilterButton"
+                    android:text="Chờ giao hàng" />
 
-    <LinearLayout
-        android:id="@+id/emptyLayout"
+                <Button
+                    android:id="@+id/btnCompleted"
+                    style="@style/CleanFilterButton"
+                    android:text="Đã giao" />
+
+                <Button
+                    android:id="@+id/btnCancelled"
+                    style="@style/CleanFilterButton"
+                    android:text="Đã hủy" />
+            </LinearLayout>
+        </HorizontalScrollView>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <TextView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerOrders"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="8dp"
+            tools:listitem="@layout/item_order" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Giỏ hàng của bạn đang trống"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
-    </LinearLayout>
-</LinearLayout>
+            android:layout_gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/emptyLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="gone">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_box"
+                app:tint="#CCCCCC" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Bạn chưa có đơn hàng nào ở mục này"
+                android:textColor="#8A8A8E"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,40 @@
+<!-- File: res/layout/item_order_product_detail.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp">
+    <ImageView
+        android:id="@+id/ivProductImage"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:scaleType="centerCrop"/>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+        <TextView
+            android:id="@+id/tvProductName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:maxLines="2"
+            tools:text="Tên sản phẩm rất dài"/>
+        <TextView
+            android:id="@+id/tvProductPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="35.000.000 ₫"/>
+    </LinearLayout>
+    <TextView
+        android:id="@+id/tvProductQuantity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:textColor="@color/black"
+        tools:text="x 2"/>
+</LinearLayout>
+    
