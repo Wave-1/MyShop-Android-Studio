@@ -21,19 +21,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myshop.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Calendar;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private TextView tvFullName, tvShopId, tvPhone, tvEmail, tvGender, tvBirthday, tvToolbarTitle;
+    private TextView tvFullName, tvPhone, tvEmail, tvGender, tvBirthday, tvToolbarTitle;
     private ImageView imgEditName, imgEditPhone, imgEditEmail, imgEditGender, imgEditBirthday, imgToolbarBack;
     private FirebaseFirestore db;
     private String userId;
+    private String addressId; // 🔹 lưu id của document address mặc định
 
-    private View layoutName, layoutPhone, layoutEmail, layoutGender, layoutBirthday;
-    private View layoutChangePassword; // 🔹 thêm view này
+    private View layoutName, layoutPhone, layoutEmail, layoutGender, layoutBirthday, layoutChangePassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         // TextView
         tvFullName = findViewById(R.id.tv_full_name);
-        tvShopId = findViewById(R.id.tv_shop_id);
         tvPhone = findViewById(R.id.tv_phone);
         tvEmail = findViewById(R.id.tv_email);
         tvGender = findViewById(R.id.tv_gender);
@@ -57,13 +57,13 @@ public class ProfileActivity extends AppCompatActivity {
         imgEditGender = findViewById(R.id.img_edit_gender);
         imgEditBirthday = findViewById(R.id.img_edit_birthday);
 
-        // LinearLayout
+        // Layout
         layoutName = findViewById(R.id.layout_name);
         layoutPhone = findViewById(R.id.layout_phone);
         layoutEmail = findViewById(R.id.layout_email);
         layoutGender = findViewById(R.id.layout_gender);
         layoutBirthday = findViewById(R.id.layout_birthday);
-        layoutChangePassword = findViewById(R.id.layout_change_password); // 🔹 ánh xạ layout thay đổi mật khẩu
+        layoutChangePassword = findViewById(R.id.layout_change_password);
 
         tvToolbarTitle.setText(getString(R.string.account_info));
 
@@ -78,7 +78,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         if (userId != null) loadUserInfo();
 
-        // Gán sự kiện click
+        // Gán sự kiện chỉnh sửa
         View.OnClickListener nameClick = v ->
                 showEditDialog("Cập nhật tên đầy đủ", tvFullName.getText().toString(), "name", tvFullName);
         imgEditName.setOnClickListener(nameClick);
@@ -102,24 +102,31 @@ public class ProfileActivity extends AppCompatActivity {
         imgEditBirthday.setOnClickListener(birthdayClick);
         layoutBirthday.setOnClickListener(birthdayClick);
 
-        // 🔹 Thêm sự kiện mở trang đổi mật khẩu
         layoutChangePassword.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, ChangePasswordActivity.class);
             startActivity(intent);
         });
     }
 
+    // 🔹 Lấy thông tin từ address mặc định
     private void loadUserInfo() {
         db.collection("users").document(userId)
+                .collection("addresses")
+                .whereEqualTo("default", true)
+                .limit(1)
                 .get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
+                .addOnSuccessListener(querySnapshot -> {
+                    if (!querySnapshot.isEmpty()) {
+                        DocumentSnapshot doc = querySnapshot.getDocuments().get(0);
+                        addressId = doc.getId();
+
                         tvFullName.setText(getOrDefault(doc.getString("name")));
-                        tvShopId.setText(getOrDefault(doc.getString("id")));
                         tvPhone.setText(getOrDefault(doc.getString("phone")));
-                        tvEmail.setText(getOrDefault(doc.getString("email")));
-                        tvGender.setText(getOrDefault(doc.getString("gender")));
-                        tvBirthday.setText(getOrDefault(doc.getString("birthday")));
+                        tvEmail.setText(getOrDefault(doc.getString("email"))); // nếu có
+                        tvGender.setText(getOrDefault(doc.getString("gender"))); // nếu có
+                        tvBirthday.setText(getOrDefault(doc.getString("birthday"))); // nếu có
+                    } else {
+                        Toast.makeText(this, "Không tìm thấy địa chỉ mặc định", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e ->
@@ -154,7 +161,13 @@ public class ProfileActivity extends AppCompatActivity {
                 return;
             }
 
+            if (addressId == null) {
+                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             db.collection("users").document(userId)
+                    .collection("addresses").document(addressId)
                     .update(field, newValue)
                     .addOnSuccessListener(aVoid -> {
                         targetView.setText(newValue);
@@ -200,7 +213,13 @@ public class ProfileActivity extends AppCompatActivity {
             RadioButton selected = dialog.findViewById(selectedId);
             String gender = selected.getText().toString();
 
+            if (addressId == null) {
+                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             db.collection("users").document(userId)
+                    .collection("addresses").document(addressId)
                     .update("gender", gender)
                     .addOnSuccessListener(aVoid -> {
                         tvGender.setText(gender);
@@ -265,7 +284,13 @@ public class ProfileActivity extends AppCompatActivity {
 
             String date = String.format("%02d/%02d/%04d", day, month, year);
 
+            if (addressId == null) {
+                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             db.collection("users").document(userId)
+                    .collection("addresses").document(addressId)
                     .update("birthday", date)
                     .addOnSuccessListener(aVoid -> {
                         tvBirthday.setText(date);
