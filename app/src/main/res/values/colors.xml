@@ -155,4 +155,24 @@
     <color name="keyguard_avatar_frame_pressed_color">#ff35b5e5</color>
 
     <color name="accessibility_focus_highlight">#80ffff00</color>
+
+    <color name="colorPrimary">#FF4081</color>
+    <color name="colorPrimaryDark">#FF4081</color>
+    <color name="colorAccent">#CACACA</color>
+
+    <color name="textColorPrimary">#5D4037</color>
+    <color name="textColorSecondary">#555555</color>
+    <color name="textColorAccent">#CACACA</color>
+    <color name="textColorHeading">#3C3C3C</color>
+    <color name="textColorLink">#032172</color>
+    <color name="textColorDescription">#7C7C7C</color>
+
+    <color name="bgMainColor">#F0F0F0</color>
+    <color name="bgFilter">#EFEBE9</color>
+
+    <color name="red">#E33131</color>
+    <color name="green">#43936C</color>
+    <color name="blue">#3F51B5</color>
+    <color name="black_overlay">#667C7474</color>
+    <color name="dividerColor">#BDBDBD</color>
 </resources>

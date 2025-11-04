@@ -71,4 +71,6 @@
     <string name="see_all">Tất cả</string>
 
     <string name="btn_settings">Cài đặt</string>
+    <string name="account_info">Thông tin tài khoản</string>
+    <string name="account_change_password">Thay đổi mật khẩu</string>
 </resources>

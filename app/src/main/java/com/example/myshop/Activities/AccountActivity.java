@@ -160,7 +160,8 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.option_settings).setOnClickListener(v -> {
-            Toast.makeText(this, "Mở cài đặt", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
