@@ -70,23 +70,6 @@
                     android:layout_height="1dp"
                     android:background="#EEEEEE" />
 
-                <!-- Số địa chỉ -->
-                <LinearLayout
-                    android:id="@+id/itemAddress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_item_selector"
-                    android:gravity="center_vertical"
-                    android:paddingVertical="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Số địa chỉ"
-                        android:textColor="#212121"
-                        android:textSize="16sp" />
-                </LinearLayout>
-
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -136,13 +119,6 @@
                         android:layout_height="18dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_flag_vn" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quốc gia"
-                        android:textColor="#212121"
-                        android:textSize="16sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -239,23 +215,6 @@
                         android:textSize="16sp" />
                 </LinearLayout>
 
-                <!-- Trung tâm hỗ trợ -->
-                <LinearLayout
-                    android:id="@+id/itemSupport"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_item_selector"
-                    android:gravity="center_vertical"
-                    android:paddingVertical="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Trung tâm hỗ trợ"
-                        android:textColor="#212121"
-                        android:textSize="16sp" />
-                </LinearLayout>
-
                 <!-- Phản hồi -->
                 <LinearLayout
                     android:id="@+id/itemFeedback"
@@ -277,7 +236,7 @@
                 <LinearLayout
                     android:id="@+id/itemDeveloper"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="59dp"
                     android:background="@drawable/bg_item_selector"
                     android:gravity="center_vertical"
                     android:paddingVertical="14dp">
@@ -289,29 +248,6 @@
                         android:textColor="#212121"
                         android:textSize="16sp" />
                 </LinearLayout>
-
-                <!-- Nút đăng xuất -->
-                <TextView
-                    android:id="@+id/itemLogout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:paddingVertical="20dp"
-                    android:text="Đăng xuất"
-                    android:textColor="#E53935"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <!-- Phiên bản -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="20dp"
-                    android:text="7.85.0 (103080363)"
-                    android:textColor="#9E9E9E"
-                    android:textSize="13sp" />
 
             </LinearLayout>
         </ScrollView>

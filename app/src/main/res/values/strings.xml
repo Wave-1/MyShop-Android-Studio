@@ -73,4 +73,5 @@
     <string name="btn_settings">Cài đặt</string>
     <string name="account_info">Thông tin tài khoản</string>
     <string name="account_change_password">Thay đổi mật khẩu</string>
+    <string name="payment_method">Phương thức thanh toán</string>
 </resources>

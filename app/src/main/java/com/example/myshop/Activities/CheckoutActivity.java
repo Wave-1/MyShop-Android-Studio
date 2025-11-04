@@ -20,7 +20,6 @@ import com.example.myshop.Constants;
 import com.example.myshop.Models.AddressModel;
 import com.example.myshop.Models.CartModel;
 import com.example.myshop.Adapters.CheckoutAdapter;
-import com.example.myshop.Models.OrderModel;
 import com.example.myshop.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
@@ -125,6 +124,8 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     private void updateAddressUI(AddressModel addressModel) {
+//        tvUserNameAndPhone.setText(addressModel.getName() + " | " + addressModel.getPhone());
+//        tvUserAddress.setText(addressModel.getAddressLine() + ", " + addressModel.getWard() + ", " + addressModel.getDistrict() + ", " + addressModel.getCity());
         tvUserNameAndPhone.setText(String.format("%s | %s", addressModel.getName(), addressModel.getPhone()));
         tvUserAddress.setText(String.format("%s, %s, %s, %s",
                 addressModel.getAddressLine(),
@@ -138,6 +139,25 @@ public class CheckoutActivity extends AppCompatActivity {
         recyclerCheckoutItems.setLayoutManager(new LinearLayoutManager(this));
         recyclerCheckoutItems.setAdapter(adapter);
     }
+
+//    private void loadUserInfo() {
+//        db.collection("users").document(uid).get()
+//                .addOnSuccessListener(doc -> {
+//                    if (doc.exists()) {
+//                        String name = doc.getString("name");
+//                        String phone = doc.getString("phone");
+//                        String address = doc.getString("defaultAddress");
+//
+//                        if (name != null) edtName.setText(name);
+//                        if (phone != null) edtPhone.setText(phone);
+//                        if (address != null) edtAddress.setText(address);
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    Log.e(TAG, "Lỗi tải thông tin người dùng: ", e);
+//                    Toast.makeText(this, "Lỗi tải thông tin: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+//                });
+//    }
 
     private void loadDefaultAddress() {
         db.collection("users")
@@ -168,6 +188,7 @@ public class CheckoutActivity extends AppCompatActivity {
         for (CartModel item : checkoutList) {
             total += item.getPrice() * item.getQuantity();
         }
+        // Định dạng tiền tệ cho chuyên nghiệp
         java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("vi", "VN"));
         tvTotalCheckout.setText(currencyFormat.format(total));
     }
@@ -206,8 +227,11 @@ public class CheckoutActivity extends AppCompatActivity {
             return;
         }
 
+        // Bắt đầu một WriteBatch để thực hiện nhiều thao tác một cách an toàn
         WriteBatch batch = db.batch();
 
+        // --- 1. Chuẩn bị dữ liệu cho đơn hàng ---
+        // Tạo một tham chiếu đến document mới trong collection "orders" CẤP CAO NHẤT
         DocumentReference orderRef = db.collection("users")
                 .document(uid)
                 .collection("orders")
@@ -224,41 +248,42 @@ public class CheckoutActivity extends AppCompatActivity {
                 .map(CartModel::getId)
                 .collect(Collectors.toList());
 
-        OrderModel newOrder = new OrderModel();
-        newOrder.setOrderId(orderId);
-        newOrder.setUserId(uid);
-        newOrder.setAddress(selectedAddress);
-        newOrder.setItems(checkoutList);
-        newOrder.setTotalAmount(totalAmount);
-        newOrder.setTimestamp(null);
-        newOrder.setStatus(Constants.ORDER_STATUS_PROCESSING);
-
         // Tạo đối tượng dữ liệu cho đơn hàng
         Map<String, Object> orderData = new HashMap<>();
-        orderData.put("orderId", newOrder.getOrderId());
-        orderData.put("userId", newOrder.getUserId());
-        orderData.put("address", newOrder.getAddress());
-        orderData.put("items", newOrder.getItems());
-        orderData.put("totalAmount", newOrder.getTotalAmount());
-        orderData.put("status", newOrder.getStatus());
+        orderData.put("orderId", orderId);
+        orderData.put("userId", uid);
+        orderData.put("customerName", selectedAddress.getName());
+        orderData.put("address", tvUserAddress.getText().toString());
+        orderData.put("phone", selectedAddress.getPhone());
+        orderData.put("items", checkoutList);
+        orderData.put("totalAmount", totalAmount);
+        orderData.put("timestamp", FieldValue.serverTimestamp()); // Dùng thời gian của server
+        orderData.put("status", Constants.ORDER_STATUS_PROCESSING);
         orderData.put("productIds", productIds);
-        orderData.put("timestamp", FieldValue.serverTimestamp());
 
+        // THAO TÁC 1: Thêm việc TẠO ĐƠN HÀNG vào batch
         batch.set(orderRef, orderData);
 
 
+        // --- 2. Cập nhật số lượng bán ("salesCount") cho từng sản phẩm ---
         for (CartModel item : checkoutList) {
             DocumentReference productRef = db.collection("products").document(item.getId());
+            // THAO TÁC 2: Thêm việc CẬP NHẬT SỐ LƯỢNG BÁN vào batch
+            // Dùng FieldValue.increment để tăng giá trị một cách an toàn
             batch.update(productRef, "salesCount", FieldValue.increment(item.getQuantity()));
         }
 
+        // --- 3. Xóa các sản phẩm trong giỏ hàng ---
         for (CartModel item : checkoutList) {
             DocumentReference cartItemRef = db.collection("users").document(uid).collection("cart").document(item.getId());
+            // THAO TÁC 3: Thêm việc XÓA GIỎ HÀNG vào batch
             batch.delete(cartItemRef);
         }
 
+        // --- 4. Thực thi tất cả các thao tác trong batch ---
         batch.commit()
                 .addOnSuccessListener(aVoid -> {
+                    // Chỉ khi batch commit thành công, tất cả các thao tác trên mới thực sự được áp dụng
                     Log.d(TAG, "Đặt hàng và cập nhật thành công với orderId: " + orderId);
                     Toast.makeText(this, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show();
 
@@ -269,8 +294,73 @@ public class CheckoutActivity extends AppCompatActivity {
                     finish(); // Đóng màn hình checkout
                 })
                 .addOnFailureListener(e -> {
+                    // Nếu có bất kỳ lỗi nào xảy ra, không có thao tác nào được thực hiện
                     Log.e(TAG, "Lỗi khi thực hiện batch commit: ", e);
                     Toast.makeText(this, "Đặt hàng thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
+
+//    private void showAddressDialog() {
+//        View view = LayoutInflater.from(this).inflate(R.layout.dialog_address_list, null);
+//        ListView lvAddresses = view.findViewById(R.id.lvAddresses);
+//        Button btnAddAddress = view.findViewById(R.id.btnAddAddress);
+//
+//        addressAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, addressList);
+//        lvAddresses.setAdapter(addressAdapter);
+//
+//        db.collection("users").document(uid).collection("addresses")
+//                .get()
+//                .addOnSuccessListener(q -> {
+//                    addressList.clear();
+//                    for (DocumentSnapshot doc : q) {
+//                        String addr = doc.getString("addressLine");
+//                        if (addr != null) addressList.add(addr);
+//                    }
+//                    addressAdapter.notifyDataSetChanged();
+//                });
+//
+//        AlertDialog dialog = new AlertDialog.Builder(this)
+//                .setTitle("Chọn địa chỉ giao hàng")
+//                .setView(view)
+//                .create();
+//
+//        lvAddresses.setOnItemClickListener((parent, v, pos, id) -> {
+//            edtAddress.setText(addressList.get(pos));
+//            dialog.dismiss();
+//        });
+//
+//        btnAddAddress.setOnClickListener(v -> showAddAddressDialog(dialog));
+//        dialog.show();
+//    }
+
+//    private void showAddAddressDialog(AlertDialog parentDialog) {
+//        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_address, null);
+//        EditText edtNewAddress = view.findViewById(R.id.edtNewAddress);
+//
+//        new AlertDialog.Builder(this)
+//                .setTitle("Thêm địa chỉ mới")
+//                .setView(view)
+//                .setPositiveButton("Lưu", (dialog, which) -> {
+//                    String newAddr = edtNewAddress.getText().toString().trim();
+//                    if (newAddr.isEmpty()) {
+//                        Toast.makeText(this, "Vui lòng nhập địa chỉ", Toast.LENGTH_SHORT).show();
+//                        return;
+//                    }
+//
+//                    Map<String, Object> data = new HashMap<>();
+//                    data.put("addressLine", newAddr);
+//
+//                    db.collection("users").document(uid)
+//                            .collection("addresses").add(data)
+//                            .addOnSuccessListener(d -> {
+//                                addressList.add(newAddr);
+//                                addressAdapter.notifyDataSetChanged();
+//                                edtAddress.setText(newAddr);
+//                                parentDialog.dismiss();
+//                            });
+//                })
+//                .setNegativeButton("Hủy", null)
+//                .show();
+//    }
 }

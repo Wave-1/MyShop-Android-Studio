@@ -24,7 +24,6 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         itemAccountInfo = findViewById(R.id.itemAccountInfo);
-        tvLogout = findViewById(R.id.itemLogout);
         imgToolbarBack = findViewById(R.id.img_toolbar_back);
         TextView tvToolbarTitle = findViewById(R.id.tv_toolbar_title);
 
@@ -42,22 +41,6 @@ public class SettingsActivity extends AppCompatActivity {
         itemAccountInfo.setOnClickListener(v -> {
             Intent intent = new Intent(SettingsActivity.this, ProfileActivity.class);
             startActivity(intent);
-        });
-
-        // Khi bấm "Đăng xuất"
-        tvLogout.setOnClickListener(v -> {
-            // Đăng xuất khỏi Firebase
-            FirebaseAuth.getInstance().signOut();
-
-            // Xóa thông tin đăng nhập trong SharedPreferences
-            SharedPreferences prefs = getSharedPreferences("MyShop", MODE_PRIVATE);
-            prefs.edit().clear().apply();
-
-            // Quay lại màn hình đăng nhập
-            Intent intent = new Intent(SettingsActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
         });
     }
 }
