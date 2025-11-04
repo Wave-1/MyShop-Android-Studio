@@ -2,12 +2,14 @@ package com.example.myshop.Activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.system.Os;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -18,7 +20,9 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,6 +34,9 @@ import com.example.myshop.Models.ProductModel;
 import com.example.myshop.Models.ReviewModel;
 import com.example.myshop.R;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
@@ -48,7 +55,7 @@ import java.util.regex.Pattern;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
-    private ImageView imgProduct;
+    private ImageView imgProduct, ivBack, ivFavorite;
     private TextView tvProductName, tvProductPrice, tvProductOriginalPrice, tvSalePercent, tvNoReviews;
     private Button btnAddToCart, btnBuyNow, btnSubmitReview;
     private RatingBar ratingBar;
@@ -58,6 +65,10 @@ public class ProductDetailActivity extends AppCompatActivity {
     private String role, productId, userId;
     private ProductAdapter relatedProductsAdapter;
     private ArrayList<ProductModel> relatedProductsList;
+    private TextView tvToolbarTitle;
+    private Toolbar toolbar;
+    private AppBarLayout appBarLayout;
+    private boolean isFavorited = false;
     private FirebaseFirestore db;
 
     @Override
@@ -72,6 +83,12 @@ public class ProductDetailActivity extends AppCompatActivity {
         productId = getIntent().getStringExtra("productId");
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        toolbar = findViewById(R.id.toolbar);
+        appBarLayout = findViewById(R.id.app_bar);
+        tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
+        ivBack = findViewById(R.id.ivBack);
+
+        ivFavorite = findViewById(R.id.ivFavorite);
         imgProduct = findViewById(R.id.imgProduct);
         tvProductName = findViewById(R.id.tvProductName);
         tvProductPrice = findViewById(R.id.tvProductPrice);
@@ -79,6 +96,25 @@ public class ProductDetailActivity extends AppCompatActivity {
         descriptionContainer = findViewById(R.id.layout_description_container);
         tvSalePercent = findViewById(R.id.tvSalePercent);
         tvProductOriginalPrice = findViewById(R.id.tvProductOriginalPrice);
+
+        // Toolbar
+        setSupportActionBar(toolbar);
+
+        ivBack.setOnClickListener(v -> onBackPressed());
+        appBarLayout.addOnOffsetChangedListener((appBarLayout1, i) -> {
+            if (Math.abs(i) >= appBarLayout1.getTotalScrollRange()) {
+                tvToolbarTitle.setVisibility(View.VISIBLE);
+                ivBack.setColorFilter(Color.WHITE);
+            } else {
+                tvToolbarTitle.setVisibility(View.INVISIBLE);
+                ivBack.setColorFilter(Color.BLACK);
+            }
+        });
+
+        ivFavorite.setOnClickListener(v -> {
+            isFavorited = !isFavorited;
+            updateFavoriteIcon();
+        });
 
         // Reviews
         reviewInputLayout = findViewById(R.id.reviewInputLayout);
@@ -98,7 +134,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         relatedProductsAdapter = new ProductAdapter(this, relatedProductsList);
         recyclerRelatedProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         recyclerRelatedProducts.setAdapter(relatedProductsAdapter);
-
 
         reviewInputLayout.setVisibility(View.GONE);
 
@@ -132,11 +167,14 @@ public class ProductDetailActivity extends AppCompatActivity {
                                             .into(imgProduct);
                                 }
                                 tvProductName.setText(productModel.getName());
+                                String productName = productModel.getName();
+                                tvToolbarTitle.setText(productName);
                                 tvProductPrice.setText(String.format("%,.0f ₫", productModel.getPrice()));
 //                                tvProductDesc.setText(productModel.getDescription() +
 //                                        " - Đây là mô tả chi tiết của " + productModel.getName());
                                 renderDescription(productModel.getDescription());
                                 showProductPrice(productModel);
+                                checkFavoriteStatus();
                                 loadReviews();
 
                                 loadRelatedProducts(productModel.getCategory(), productModel.getProductId());
@@ -259,7 +297,77 @@ public class ProductDetailActivity extends AppCompatActivity {
                             Toast.makeText(this, "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                     );
         }
+    }
 
+    private void checkFavoriteStatus() {
+        if (userId == null || productId == null) return;
+        db.collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(productId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    isFavorited = documentSnapshot.exists();
+                    if (isFavorited) {
+                        ivFavorite.setImageResource(R.drawable.ic_favorite_filled);
+                        ivFavorite.setColorFilter(Color.parseColor("#E53935"));
+                    } else {
+                        ivFavorite.setImageResource(R.drawable.ic_favorite_border);
+                        ivFavorite.setColorFilter(Color.LTGRAY);
+                    }
+                });
+    }
+
+    private void updateFavoriteIcon() {
+        if (userId == null || productId == null) {
+            Toast.makeText(this, "Không tìm thấy sản phẩm", Toast.LENGTH_SHORT).show();
+            isFavorited = !isFavorited;
+            return;
+        }
+        if (isFavorited) {
+            ivFavorite.setImageResource(R.drawable.ic_favorite_filled);
+            ivFavorite.setColorFilter(Color.parseColor("#E53935"));
+
+            db.collection("users")
+                    .document(userId)
+                    .collection("favorites")
+                    .document(productId)
+                    .set(new HashMap<>())
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Đã thêm vào danh sách yêu thích", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        isFavorited = false;
+                        updateFavoriteIcon();
+                    });
+        } else {
+            ivFavorite.setImageResource(R.drawable.ic_favorite_border);
+            ivFavorite.setColorFilter(Color.LTGRAY);
+
+            db.collection("users")
+                    .document(userId)
+                    .collection("favorites")
+                    .document(productId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Đã xóa khỏi danh sách yêu thích", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        isFavorited = true;
+                        updateFavoriteIcon();
+                    });
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void loadRelatedProducts(String category, String currentProductId) {
@@ -278,7 +386,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         ProductModel product = document.toObject(ProductModel.class);
                         product.setProductId(document.getId());
-                        if (!product.getProductId().equals(currentProductId)){
+                        if (!product.getProductId().equals(currentProductId)) {
                             relatedProductsList.add(product);
                         }
                     }

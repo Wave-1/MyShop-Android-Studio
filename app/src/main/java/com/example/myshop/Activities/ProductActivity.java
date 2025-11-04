@@ -5,8 +5,13 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -15,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,6 +28,9 @@ import com.example.myshop.Adapters.ProductAdapter;
 import com.example.myshop.Models.ProductModel;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -45,11 +54,23 @@ public class ProductActivity extends AppCompatActivity {
     Button btnAll, btnNew, btnHot, btnSortPrice, btnCategory;
     List<Button> filterButtons = new ArrayList<>();
     BottomNavigationView bottomNav;
+    private ImageView ivCart;
+    private FrameLayout cartLayout;
+    private TextView tvCartBadge;
+    private ProgressBar progressBar;
+    private NestedScrollView scrollMain;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_product);
+
+        ivCart = findViewById(R.id.ivCart);
+        cartLayout = findViewById(R.id.cartLayout);
+        tvCartBadge = findViewById(R.id.tvCartBadge);
+
+        progressBar = findViewById(R.id.progressBar);
+        scrollMain = findViewById(R.id.scrollMain);
 
         btnAll = findViewById(R.id.btnFilterAll);
         btnNew = findViewById(R.id.btnFilterNew);
@@ -99,6 +120,19 @@ public class ProductActivity extends AppCompatActivity {
             return insets;
         });
 
+        cartLayout.setOnClickListener(v -> {
+            startActivity(new Intent(this, CartActivity.class));
+        });
+
+        loadCategoryNames();
+
+        if (getIntent().hasExtra("SEARCH_KEYWORD")){
+            String keyword = getIntent().getStringExtra("SEARCH_KEYWORD");
+            edtSearch.setText(keyword);
+            searchProducts(keyword);
+        }else {
+            loadProducts();
+        }
 
         // ✅ Gắn sự kiện Bottom Navigation
         bottomNav.setSelectedItemId(R.id.nav_products); // Chọn tab Home mặc định
@@ -110,9 +144,6 @@ public class ProductActivity extends AppCompatActivity {
 
                 return true;
             } else if (id == R.id.nav_products) {
-                return true;
-            } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(this, CartActivity.class));
                 return true;
             } else if (id == R.id.nav_account) {
                 startActivity(new Intent(this, AccountActivity.class));
@@ -202,15 +233,45 @@ public class ProductActivity extends AppCompatActivity {
             resetProductList();
         });
 
-        // Lần đầu load toàn bộ sản phẩm
-        loadProducts();
-        loadCategoryNames();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nav_products);
+        setupCartBadgeListener();
+    }
+
+    private void setupCartBadgeListener() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null){
+            tvCartBadge.setVisibility(View.GONE);
+            return;
+        }
+        String uid = firebaseUser.getUid();
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .collection("cart")
+                .addSnapshotListener((value, error) -> {
+                    if (error != null){
+                        tvCartBadge.setVisibility(View.GONE);
+                        return;
+                    }
+                    if (value != null && !value.isEmpty()){
+                        int totalItems = 0;
+                        for (DocumentSnapshot doc : value){
+                            if (doc.contains("quantity")){
+                                totalItems += doc.getLong("quantity").intValue();
+                                tvCartBadge.setText(String.valueOf(totalItems));
+                                tvCartBadge.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }else {
+                        tvCartBadge.setVisibility(View.GONE);
+                    }
+                });
     }
 
     private void loadCategoryNames() {
@@ -349,6 +410,7 @@ public class ProductActivity extends AppCompatActivity {
     }
 
     private void loadProducts() {
+        showLoading(true);
         db.collection("products")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -359,12 +421,24 @@ public class ProductActivity extends AppCompatActivity {
                         productModelList.add(p);
                     }
 
-                    adapter.setProducts(new ArrayList<>(productModelList)); // 🔥 cập nhật list trong adapter
+                    adapter.setProducts(new ArrayList<>(productModelList));
+                    showLoading(false);
                     adapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
+                .addOnFailureListener(e -> {
+                    showLoading(false);
+                    Toast.makeText(this, "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void showLoading(boolean isLoading) {
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            scrollMain.setVisibility(View.GONE);
+        } else {
+            scrollMain.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void loadNewProducts() {

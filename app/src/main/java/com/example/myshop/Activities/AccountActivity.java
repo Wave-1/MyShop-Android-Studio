@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class AccountActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNav;
+    private RelativeLayout optionFavorites;
     private LinearLayout layoutUser, layoutGuest;
     private ShapeableImageView imgAvatar;
     private TextView tvUsername, tvEditProfile;
@@ -85,12 +87,8 @@ public class AccountActivity extends AppCompatActivity {
                 startActivity(new Intent(AccountActivity.this, ProductActivity.class));
 //                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
                 return true;
-            } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(AccountActivity.this, CartActivity.class));
-//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
-                return true;
             }
-            if (intent != null){
+            if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
                 return true;
@@ -122,19 +120,17 @@ public class AccountActivity extends AppCompatActivity {
 
         findViewById(R.id.layoutViewAllOrders).setOnClickListener(v -> {
             Toast.makeText(this, "Xem tất cả đơn hàng", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(AccountActivity.this, OrderTrackingActivity.class));
+            openOrderTrackingActivity(null);
         });
 
         // Đang xử lý
         findViewById(R.id.status_processing).setOnClickListener(v -> {
             openOrderTrackingActivity(Constants.ORDER_STATUS_PROCESSING);
-
         });
 
         // Chờ giao hàng
         findViewById(R.id.status_shipping).setOnClickListener(v -> {
             openOrderTrackingActivity(Constants.ORDER_STATUS_SHIPPING);
-
         });
 
         // Đã giao
@@ -149,6 +145,11 @@ public class AccountActivity extends AppCompatActivity {
             Toast.makeText(this, "Đánh giá", Toast.LENGTH_SHORT).show();
         });
 
+        // Đã thích
+        findViewById(R.id.option_favorites).setOnClickListener(v -> {
+            Intent intent = new Intent(this, FavoritesActivity.class);
+            startActivity(intent);
+        });
 
         findViewById(R.id.option_address).setOnClickListener(v -> {
             Toast.makeText(this, "Mở sổ địa chỉ", Toast.LENGTH_SHORT).show();
@@ -159,13 +160,15 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.option_settings).setOnClickListener(v -> {
-            Toast.makeText(this, "Mở cài đặt", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
     private void openOrderTrackingActivity(String status) {
         Intent intent = new Intent(this, OrderTrackingActivity.class);
         intent.putExtra(Constants.INTENT_KEY_ORDER_STATUS, status);
+        intent.putExtra("FROM_ACTIVITY", "ACCOUNT");
         startActivity(intent);
     }
 

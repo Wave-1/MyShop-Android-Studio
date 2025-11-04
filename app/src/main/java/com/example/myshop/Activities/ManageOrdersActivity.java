@@ -89,27 +89,20 @@ public class ManageOrdersActivity extends AppCompatActivity {
     }
 
     private void applyBottomNavigationPadding() {
-        // Lấy ra BottomNavigationView và RecyclerView
         bottomNav = findViewById(R.id.bottomNav);
         recyclerOrders = findViewById(R.id.recyclerOrders);
 
-        // Đảm bảo các view không null
         if (bottomNav == null || recyclerOrders == null) {
             return;
         }
 
-        // Post một hành động vào hàng đợi của View.
-        // Hành động này sẽ được thực thi sau khi layout đã được tính toán xong.
         bottomNav.post(() -> {
-            // Lấy chiều cao thực tế của BottomNavigationView
             int navHeight = bottomNav.getHeight();
 
-            // Lấy padding hiện tại của RecyclerView
             int paddingLeft = recyclerOrders.getPaddingLeft();
             int paddingTop = recyclerOrders.getPaddingTop();
             int paddingRight = recyclerOrders.getPaddingRight();
 
-            // Gán lại padding, chỉ thay đổi paddingBottom
             recyclerOrders.setPadding(paddingLeft, paddingTop, paddingRight, navHeight);
         });
     }
@@ -188,12 +181,14 @@ public class ManageOrdersActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         recyclerOrders.setLayoutManager(new LinearLayoutManager(this));
-        orderAdapter = new OrderAdapter(this, orderList, order -> {
-//            showChangeStatusDialog(order);
-            Intent intent = new Intent(this, AdminOrderDetailActivity.class);
-            intent.putExtra("ORDER_OBJECT", order);
-            startActivityForResult(intent, UPDATE_ORDER_REQUEST_CODE);
-        });
+        orderAdapter = new OrderAdapter(this,
+                orderList,
+                order -> {
+                    Intent intent = new Intent(this, AdminOrderDetailActivity.class);
+                    intent.putExtra("ORDER_OBJECT", order);
+                    startActivityForResult(intent, UPDATE_ORDER_REQUEST_CODE);
+                }, null
+        );
         recyclerOrders.setAdapter(orderAdapter);
     }
 
@@ -211,10 +206,17 @@ public class ManageOrdersActivity extends AppCompatActivity {
         query.get().addOnSuccessListener(queryDocumentSnapshots -> {
             orderList.clear();
             for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                OrderModel order = doc.toObject(OrderModel.class);
-                String oderId = doc.getId();
-                order.setOrderId(oderId);
-                orderList.add(order);
+                try {
+                    OrderModel order = doc.toObject(OrderModel.class);
+                    order.setOrderId(doc.getId());
+                    orderList.add(order);
+                } catch (Exception e) {
+                    Log.e("FirestoreDeserialize", "Lỗi chuyển đổi đơn hàng: " + doc.getId() + ". Nguyên nhân: " + e.getMessage());
+                }
+//                OrderModel order = doc.toObject(OrderModel.class);
+//                String oderId = doc.getId();
+//                order.setOrderId(oderId);
+//                orderList.add(order);
             }
             progressBar.setVisibility(View.GONE);
             if (orderList.isEmpty()) {
@@ -245,7 +247,7 @@ public class ManageOrdersActivity extends AppCompatActivity {
                 Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
                 order.setStatus(newStatus);
                 orderAdapter.notifyDataSetChanged();
-                loadOrders(currentStatus); // Reload lại list hiện tại
+                loadOrders(currentStatus);
             }).addOnFailureListener(e -> Toast.makeText(this, "Lỗi cập nhật!", Toast.LENGTH_SHORT).show());
         }).show();
     }
@@ -254,12 +256,9 @@ public class ManageOrdersActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data, @NonNull ComponentCaller caller) {
         super.onActivityResult(requestCode, resultCode, data, caller);
         if (requestCode == UPDATE_ORDER_REQUEST_CODE) {
-            // 2. Kiểm tra xem kết quả trả về có phải là THÀNH CÔNG (OK) không
             if (resultCode == RESULT_OK) {
-                // 3. Nếu đúng, có nghĩa là đơn hàng đã được cập nhật thành công
-                //    => Tải lại danh sách đơn hàng để cập nhật giao diện
                 Toast.makeText(this, "Đang làm mới danh sách đơn hàng...", Toast.LENGTH_SHORT).show();
-                loadOrders(currentStatus); // Gọi lại hàm loadOrders với bộ lọc hiện tại
+                loadOrders(currentStatus);
             }
         }
     }

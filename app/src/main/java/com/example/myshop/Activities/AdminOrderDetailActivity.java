@@ -3,6 +3,7 @@ package com.example.myshop.Activities;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,13 +24,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminOrderDetailActivity extends AppCompatActivity {
-    private TextView tvUserEmail, tvAddress;
+    private TextView tvUserEmail, tvAddress, tvOrderStatus, tvCancellationReason;
     private RecyclerView recyclerProducts;
     private Button btnUpdateStatus;
     private MaterialToolbar toolbar;
     private FirebaseFirestore db;
     private OrderModel currentOrder;
     private CartAdapter cartAdapter;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,6 +43,8 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
         tvAddress = findViewById(R.id.tvAddress);
         recyclerProducts = findViewById(R.id.recyclerProducts);
         btnUpdateStatus = findViewById(R.id.btnUpdateStatus);
+        tvOrderStatus = findViewById(R.id.tvOrderStatus);
+        tvCancellationReason = findViewById(R.id.tvCancellationReason);
 
         db = FirebaseFirestore.getInstance();
 
@@ -99,6 +103,15 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
         cartAdapter = new CartAdapter(this, currentOrder.getItems(), true, null);
         recyclerProducts.setAdapter(cartAdapter);
         loadUserInfo();
+
+        tvOrderStatus.setText("Trạng thái: " + currentOrder.getStatus());
+        if ("Đã hủy".equalsIgnoreCase(currentOrder.getStatus()) && currentOrder.getCancellationReason() != null && !currentOrder.getCancellationReason().isEmpty()) {
+            tvCancellationReason.setText("Lý do: " + currentOrder.getCancellationReason());
+            tvCancellationReason.setVisibility(View.VISIBLE);
+        }else {
+            tvCancellationReason.setVisibility(View.GONE);
+        }
+
     }
 
     private void loadUserInfo() {
@@ -107,18 +120,15 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
                 tvUserEmail.setText("Email: " + userDoc.getString("email"));
             }
         });
-        if (currentOrder.getAddress() != null) {
-            db.collection("users")
-                    .document(currentOrder.getUserId())
-                    .collection("addresses")
-                    .whereEqualTo("default", true)
-                    .limit(1)
-                    .get().addOnSuccessListener(addressDoc -> {
-                        if (!addressDoc.isEmpty()) {
-                            AddressModel address = addressDoc.getDocuments().get(0).toObject(AddressModel.class);
-                            tvAddress.setText("Địa chỉ: " + address.getAddressLine() + ", " + address.getWard() + ", " + address.getDistrict() + ", " + address.getCity());
-                        }
-                    });
+        AddressModel orderAddress = currentOrder.getAddress();
+        if (orderAddress != null) {
+            String recipientInfo = "Người nhận: " + orderAddress.getName() + "\n" +
+                    "SĐT: " + orderAddress.getPhone() + "\n" +
+                    "Địa chỉ: " + orderAddress.getAddressLine() + ", " +
+                    orderAddress.getWard() + ", " +
+                    orderAddress.getDistrict() + ", " +
+                    orderAddress.getCity();
+            tvAddress.setText(recipientInfo);
         } else {
             tvAddress.setText("Địa chỉ: Không có thông tin");
         }
@@ -128,6 +138,8 @@ public class AdminOrderDetailActivity extends AppCompatActivity {
             Toast.makeText(this, "Lỗi: Thiếu thông tin để cập nhật", Toast.LENGTH_SHORT).show();
             return;
         }
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("status", newStatus);
 
         db.collection("users").document(currentOrder.getUserId())
                 .collection("orders").document(currentOrder.getOrderId())

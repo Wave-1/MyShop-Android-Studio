@@ -45,9 +45,6 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 startActivity(new Intent(this, HomeActivity.class));
                 return true;
-            } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(this, CartActivity.class));
-                return true;
             } else if (id == R.id.nav_account) {
                 startActivity(new Intent(this, AccountActivity.class));
                 return true;

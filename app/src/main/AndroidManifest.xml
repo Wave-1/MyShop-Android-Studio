@@ -38,6 +38,7 @@
         <activity android:name=".Activities.AddressActivity" />
         <activity android:name=".Activities.OrderDetailActivity" />
         <activity android:name=".Activities.AddEditAddressActivity" />
+        <activity android:name=".Activities.FavoritesActivity" />
 
         <activity android:name=".Activities.ManageOrdersActivity" />
         <activity android:name=".Activities.ManageUsersActivity" />
