@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lý do hủy đơn hàng"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này."
+        android:textSize="14sp" />
+
+    <RadioGroup
+        android:id="@+id/rgReasons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
+
+        <RadioButton
+            android:id="@+id/rbReason1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tôi đã thay đổi ý định" />
+
+        <RadioButton
+            android:id="@+id/rbReason2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tìm thấy sản phẩm tốt hơn ở nơi khác" />
+
+        <RadioButton
+            android:id="@+id/rbReason3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thời gian giao hàng quá lâu" />
+
+        <RadioButton
+            android:id="@+id/rbReasonOther"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lý do khác (vui lòng ghi rõ)" />
+
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etOtherReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Nhập lý do của bạn..."
+        android:imeOptions="actionDone"
+        android:inputType="textMultiLine"
+        android:minLines="2"
+        android:visibility="gone" /> <!-- Ban đầu ẩn đi -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnDialogCancel"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hủy bỏ" />
+
+        <Button
+            android:id="@+id/btnDialogConfirm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Xác nhận" />
+    </LinearLayout>
+
+</LinearLayout>

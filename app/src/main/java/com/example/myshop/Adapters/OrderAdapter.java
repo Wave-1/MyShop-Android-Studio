@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,15 +40,19 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     private final Context context;
     private final ArrayList<OrderModel> orderList;
     private final OnItemClickListener listener;
-
+    private final OnOrderCancelListener cancelListener;
     public interface OnItemClickListener {
         void onItemClick(OrderModel order);
     }
 
-    public OrderAdapter(Context context, ArrayList<OrderModel> orderList, OnItemClickListener listener) {
+    public interface OnOrderCancelListener {
+        void onCancelClick(OrderModel order);
+    }
+    public OrderAdapter(Context context, ArrayList<OrderModel> orderList, OnItemClickListener listener, OnOrderCancelListener cancelListener) {
         this.context = context;
         this.orderList = orderList;
         this.listener = listener;
+        this.cancelListener = cancelListener;
     }
 
     @NonNull
@@ -60,8 +65,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull OrderAdapter.ViewHolder holder, int position) {
         OrderModel order = orderList.get(position);
-
-        holder.bind(order, listener);
+        holder.bind(order, listener, cancelListener);
 
     }
 
@@ -72,8 +76,12 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivProductImage;
-        TextView tvOrderId, tvProductName, tvProductPrice, tvProductQuantity, tvItemCount, tvOrderDate, tvTotalAmount, tvOrderStatus;
+        TextView tvOrderId, tvProductName,
+                tvProductPrice, tvProductQuantity,
+                tvItemCount, tvOrderDate, tvTotalAmount,
+                tvOrderStatus;
         Context context;
+        Button btnCancelOrder, btnViewDetails;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -87,9 +95,12 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvItemCount = itemView.findViewById(R.id.tvItemCount);
             tvOrderDate = itemView.findViewById(R.id.tvOrderDate);
             tvTotalAmount = itemView.findViewById(R.id.tvTotalAmount);
+
+            btnCancelOrder = itemView.findViewById(R.id.btnCancelOrder);
+            btnViewDetails = itemView.findViewById(R.id.btnViewDetails);
         }
 
-        public void bind(final OrderModel order, final OnItemClickListener listener) {
+        public void bind(final OrderModel order, final OnItemClickListener listener, final OnOrderCancelListener cancelListener) {
             if (order == null || order.getItems() == null || order.getItems().isEmpty()) {
                 itemView.setVisibility(View.GONE);
                 return;
@@ -106,10 +117,6 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvOrderStatus.setText(status);
 
             if (order.getTimestamp() != null) {
-//                Timestamp timestamp = order.getTimestamp();
-//                Date date = timestamp.toDate();
-//                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-//                tvOrderDate.setText(sdf.format(date));
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
                 tvOrderDate.setText(sdf.format(order.getTimestamp().toDate()));
             }
@@ -140,8 +147,19 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             } else {
                 tvItemCount.setVisibility(View.GONE);
             }
+            if ("Đang xử lý".equalsIgnoreCase(order.getStatus())){
+                btnCancelOrder.setVisibility(View.VISIBLE);
+            } else {
+                btnCancelOrder.setVisibility(View.GONE);
+            }
 
-            itemView.setOnClickListener(v -> {
+            btnCancelOrder.setOnClickListener(v -> {
+                if (cancelListener != null){
+                    cancelListener.onCancelClick(order);
+                }
+            });
+
+            btnViewDetails.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onItemClick(order);
                 }

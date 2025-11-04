@@ -4,8 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.os.Handler;
 
@@ -22,6 +29,9 @@ import com.example.myshop.Models.ProductModel;
 import com.example.myshop.Adapters.ProductAdapter;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.card.MaterialCardView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -31,15 +41,17 @@ import java.util.Collections;
 
 public class HomeActivity extends AppCompatActivity {
 
-    EditText edtSearch;
-    Button btnSearch;
     RecyclerView recyclerFlashSale, recyclerSuggestion, recyclerNewProducts, recyclerBestSeller;
     BottomNavigationView bottomNav;
-
     ArrayList<ProductModel> flashSaleList, recommendList, newProductsList, bestSellerList;
     ProductAdapter flashSaleAdapter, recommendAdapter, newProductsAdapter, bestSellerAdapter;
     private Handler autoScrollHandler;
     private Runnable autoScrollRunnable;
+    private EditText edtSearchHome;
+    private ImageView ivCart;
+    private FrameLayout cartLayout;
+    private TextView tvCartBadge;
+    private ProgressBar progressBar;
     private final long AUTO_SCROLL_DELAY = 5000;
 
     @Override
@@ -48,8 +60,11 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        edtSearch = findViewById(R.id.edtSearch);
-        btnSearch = findViewById(R.id.btnSearch);
+        progressBar = findViewById(R.id.progressBar);
+        edtSearchHome = findViewById(R.id.edtSearchHome);
+        ivCart = findViewById(R.id.ivCart);
+        cartLayout = findViewById(R.id.cartLayout);
+        tvCartBadge = findViewById(R.id.tvCartBadge);
         recyclerFlashSale = findViewById(R.id.recyclerFlashSale);
         recyclerSuggestion = findViewById(R.id.recyclerSuggestion);
         recyclerNewProducts = findViewById(R.id.recyclerNewProducts);
@@ -66,10 +81,7 @@ public class HomeActivity extends AppCompatActivity {
             return insets;
         });
 
-        btnSearch.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ProductActivity.class);
-            startActivity(intent);
-        });
+        setupHeaderActions();
         // Flash Sale: hiển thị ngang
         flashSaleList = new ArrayList<>();
         flashSaleAdapter = new ProductAdapter(this, flashSaleList);
@@ -98,12 +110,17 @@ public class HomeActivity extends AppCompatActivity {
         recyclerBestSeller.setAdapter(bestSellerAdapter);
         recyclerBestSeller.setNestedScrollingEnabled(false);
 
+
         // Lấy danh sách Flash Sale (sản phẩm có salePercent > 0)
+        scrollMain.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
         db.collection("products").whereGreaterThan("salePercent", 0).get().addOnSuccessListener(querySnapshot -> {
             flashSaleList.clear();
             for (DocumentSnapshot doc : querySnapshot) {
                 ProductModel p = doc.toObject(ProductModel.class);
                 if (p != null) {
+                    progressBar.setVisibility(View.GONE);
+                    scrollMain.setVisibility(View.VISIBLE);
                     p.setProductId(doc.getId()); // gán id Firestore
                     flashSaleList.add(p);
                 }
@@ -113,7 +130,11 @@ public class HomeActivity extends AppCompatActivity {
                 stopAutoScroll();
                 startAutoScroll();
             }
-        }).addOnFailureListener(e -> Log.e("Firestore", "Lỗi load Flash Sale", e));
+        }).addOnFailureListener(e -> {
+            progressBar.setVisibility(View.GONE);
+            scrollMain.setVisibility(View.VISIBLE);
+            Log.e("Firestore", "Lỗi load Flash Sale", e);
+        });
 
         // Lấy danh sách gợi ý
         db.collection("products").get().addOnSuccessListener(querySnapshot -> {
@@ -190,9 +211,9 @@ public class HomeActivity extends AppCompatActivity {
             } else if (id == R.id.nav_products) {
                 startActivity(new Intent(HomeActivity.this, ProductActivity.class));
                 return true;
-            } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(HomeActivity.this, CartActivity.class));
-                return true;
+//            } else if (id == R.id.nav_cart) {
+//                startActivity(new Intent(HomeActivity.this, CartActivity.class));
+//                return true;
             } else if (id == R.id.nav_account) {
                 startActivity(new Intent(HomeActivity.this, AccountActivity.class));
                 return true;
@@ -203,10 +224,62 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    private void setupHeaderActions() {
+        edtSearchHome.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH){
+                String keyword = edtSearchHome.getText().toString().trim();
+                if (!keyword.isEmpty()){
+                    Intent intent = new Intent(this, ProductActivity.class);
+                    intent.putExtra("SEARCH_KEYWORD", keyword);
+                    startActivity(intent);
+                    edtSearchHome.setText("");
+                }
+                    return true;
+            }
+            return false;
+        });
+        cartLayout.setOnClickListener(v -> {
+            startActivity(new Intent(this, CartActivity.class));
+        });
+
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nav_home);
+        setupCartBadgeListener();
+    }
+
+    private void setupCartBadgeListener() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (firebaseUser == null){
+            tvCartBadge.setVisibility(View.GONE);
+            return;
+        }
+        String uid = firebaseUser.getUid();
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .collection("cart")
+                .addSnapshotListener((value, error) -> {
+                    if (error != null){
+                        tvCartBadge.setVisibility(View.GONE);
+                        return;
+                    }
+                    if (value != null && !value.isEmpty()){
+                        int totalItems = 0;
+                        for (DocumentSnapshot doc : value){
+                            if (doc.contains("quantity")){
+                                totalItems += doc.getLong("quantity").intValue();
+                                tvCartBadge.setText(String.valueOf(totalItems));
+                                tvCartBadge.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }else {
+                        tvCartBadge.setVisibility(View.GONE);
+                    }
+                });
     }
 
     @Override
@@ -257,24 +330,4 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-
-    private void searchProducts(String keyword) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        recommendList.clear();
-
-        db.collection("products").get().addOnSuccessListener(querySnapshot -> {
-            for (DocumentSnapshot doc : querySnapshot) {
-                ProductModel p = doc.toObject(ProductModel.class);
-                if (p != null && p.getName() != null && p.getName().toLowerCase().contains(keyword.toLowerCase())) {
-                    p.setProductId(doc.getId());
-                    recommendList.add(p);
-                }
-            }
-            recommendAdapter.notifyDataSetChanged();
-
-            if (recommendList.isEmpty()) {
-                Toast.makeText(this, "Không tìm thấy sản phẩm phù hợp!", Toast.LENGTH_SHORT).show();
-            }
-        }).addOnFailureListener(e -> Toast.makeText(this, "Lỗi khi tìm kiếm: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-    }
 }
