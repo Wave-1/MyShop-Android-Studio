@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/bg_popup_round"
+    android:gravity="center_horizontal">
+
+    <!-- Tiêu đề -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cập nhật thông tin"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Ô nhập -->
+    <EditText
+        android:id="@+id/edt_value"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/bg_edittext_outline"
+        android:hint="Nhập thông tin mới"
+        android:padding="10dp"
+        android:textColor="#000000"
+        android:textColorHint="#9E9E9E"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Nút xác nhận -->
+    <Button
+        android:id="@+id/btn_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:backgroundTint="#FF007A"
+        android:text="Xác nhận"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"/>
+</LinearLayout>
