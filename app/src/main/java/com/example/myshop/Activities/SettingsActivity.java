@@ -26,6 +26,9 @@ public class SettingsActivity extends AppCompatActivity {
         itemAccountInfo = findViewById(R.id.itemAccountInfo);
         tvLogout = findViewById(R.id.itemLogout);
         imgToolbarBack = findViewById(R.id.img_toolbar_back);
+        TextView tvToolbarTitle = findViewById(R.id.tv_toolbar_title);
+
+        tvToolbarTitle.setText(getString(R.string.btn_settings));
 
         // Khi nhấn nút quay lại (mũi tên trên thanh toolbar)
         imgToolbarBack.setOnClickListener(v -> {

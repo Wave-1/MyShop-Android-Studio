@@ -1,94 +1,282 @@
 package com.example.myshop.Activities;
 
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.NumberPicker;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.myshop.Adapters.ProfileAdapter;
-import com.example.myshop.Models.ProfileModel;
 import com.example.myshop.R;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Calendar;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private EditText edtName, edtAddress, edtPhone, edtEmail;
-    private Button btnSave, btnChangePassword;
+    private TextView tvFullName, tvShopId, tvPhone, tvEmail, tvGender, tvBirthday, tvToolbarTitle;
+    private ImageView imgEditName, imgEditPhone, imgEditEmail, imgEditGender, imgEditBirthday, imgToolbarBack;
+    private FirebaseFirestore db;
+    private String userId;
 
-    FirebaseAuth auth;
-    FirebaseUser user;
-    FirebaseFirestore db;
-    DocumentReference docRef;
+    private View layoutName, layoutPhone, layoutEmail, layoutGender, layoutBirthday;
+    private View layoutChangePassword; // 🔹 thêm view này
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        edtName = findViewById(R.id.edtName);
-        edtAddress =findViewById(R.id.edtAddress);
-        edtPhone = findViewById(R.id.edtPhone);
-        edtEmail = findViewById(R.id.edtEmail);
-        btnSave = findViewById(R.id.btnSave);
-        btnChangePassword = findViewById(R.id.btnChangePassword);
+        // TextView
+        tvFullName = findViewById(R.id.tv_full_name);
+        tvShopId = findViewById(R.id.tv_shop_id);
+        tvPhone = findViewById(R.id.tv_phone);
+        tvEmail = findViewById(R.id.tv_email);
+        tvGender = findViewById(R.id.tv_gender);
+        tvBirthday = findViewById(R.id.tv_birthday);
+        imgToolbarBack = findViewById(R.id.img_toolbar_back);
+        tvToolbarTitle = findViewById(R.id.tv_toolbar_title);
 
-        auth = FirebaseAuth.getInstance();
-        user = auth.getCurrentUser();
+        // ImageView
+        imgEditName = findViewById(R.id.img_edit_name);
+        imgEditPhone = findViewById(R.id.img_edit_phone);
+        imgEditEmail = findViewById(R.id.img_edit_email);
+        imgEditGender = findViewById(R.id.img_edit_gender);
+        imgEditBirthday = findViewById(R.id.img_edit_birthday);
+
+        // LinearLayout
+        layoutName = findViewById(R.id.layout_name);
+        layoutPhone = findViewById(R.id.layout_phone);
+        layoutEmail = findViewById(R.id.layout_email);
+        layoutGender = findViewById(R.id.layout_gender);
+        layoutBirthday = findViewById(R.id.layout_birthday);
+        layoutChangePassword = findViewById(R.id.layout_change_password); // 🔹 ánh xạ layout thay đổi mật khẩu
+
+        tvToolbarTitle.setText(getString(R.string.account_info));
+
+        imgToolbarBack.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, SettingsActivity.class);
+            startActivity(intent);
+            finish();
+        });
+
         db = FirebaseFirestore.getInstance();
+        userId = FirebaseAuth.getInstance().getUid();
 
-        if (user != null){
-            edtEmail.setText(user.getEmail());
-            docRef = db.collection("users").document(user.getUid());
-            loadUserData();
-        }
+        if (userId != null) loadUserInfo();
 
-        btnSave.setOnClickListener(v -> saveUserData());
-        btnChangePassword.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ChangePasswordActivity.class);
+        // Gán sự kiện click
+        View.OnClickListener nameClick = v ->
+                showEditDialog("Cập nhật tên đầy đủ", tvFullName.getText().toString(), "name", tvFullName);
+        imgEditName.setOnClickListener(nameClick);
+        layoutName.setOnClickListener(nameClick);
+
+        View.OnClickListener phoneClick = v ->
+                showEditDialog("Cập nhật số điện thoại", tvPhone.getText().toString(), "phone", tvPhone);
+        imgEditPhone.setOnClickListener(phoneClick);
+        layoutPhone.setOnClickListener(phoneClick);
+
+        View.OnClickListener emailClick = v ->
+                showEditDialog("Cập nhật email", tvEmail.getText().toString(), "email", tvEmail);
+        imgEditEmail.setOnClickListener(emailClick);
+        layoutEmail.setOnClickListener(emailClick);
+
+        View.OnClickListener genderClick = v -> showGenderDialog();
+        imgEditGender.setOnClickListener(genderClick);
+        layoutGender.setOnClickListener(genderClick);
+
+        View.OnClickListener birthdayClick = v -> showBirthDialog();
+        imgEditBirthday.setOnClickListener(birthdayClick);
+        layoutBirthday.setOnClickListener(birthdayClick);
+
+        // 🔹 Thêm sự kiện mở trang đổi mật khẩu
+        layoutChangePassword.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, ChangePasswordActivity.class);
             startActivity(intent);
         });
     }
 
-    private void saveUserData() {
-        String name = edtName.getText().toString().trim();
-        String address = edtAddress.getText().toString().trim();
-        String phone = edtPhone.getText().toString().trim();
-
-        if(name.isEmpty() || address.isEmpty() || phone.isEmpty()){
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("name", name);
-        updates.put("defaultAddress", address);
-        updates.put("phone", phone);
-
-        docRef.update(updates)
-                .addOnSuccessListener(aVoid -> Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(this, "Cập nhật thất bại", Toast.LENGTH_SHORT).show());
+    private void loadUserInfo() {
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        tvFullName.setText(getOrDefault(doc.getString("name")));
+                        tvShopId.setText(getOrDefault(doc.getString("id")));
+                        tvPhone.setText(getOrDefault(doc.getString("phone")));
+                        tvEmail.setText(getOrDefault(doc.getString("email")));
+                        tvGender.setText(getOrDefault(doc.getString("gender")));
+                        tvBirthday.setText(getOrDefault(doc.getString("birthday")));
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Lỗi tải dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void loadUserData() {
-        docRef.get().addOnSuccessListener(command -> {
-            if(command.exists()){
-                edtName.setText(command.getString("name"));
-                edtAddress.setText(command.getString("defaultAddress"));
-                edtPhone.setText(command.getString("phone"));
+    private String getOrDefault(String value) {
+        return (value != null && !value.isEmpty()) ? value : "Chưa thiết lập";
+    }
+
+    private void showEditDialog(String title, String currentValue, String field, TextView targetView) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_text);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvTitle = dialog.findViewById(R.id.tv_title);
+        EditText edtValue = dialog.findViewById(R.id.edt_value);
+        Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
+
+        tvTitle.setText(title);
+        edtValue.setText(currentValue);
+
+        btnConfirm.setOnClickListener(v -> {
+            String newValue = edtValue.getText().toString().trim();
+            if (newValue.isEmpty()) {
+                edtValue.setError("Vui lòng nhập thông tin");
+                return;
             }
+
+            db.collection("users").document(userId)
+                    .update(field, newValue)
+                    .addOnSuccessListener(aVoid -> {
+                        targetView.setText(newValue);
+                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+
+            dialog.dismiss();
         });
+
+        dialog.show();
+    }
+
+    private void showGenderDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_gender);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        RadioGroup rgGender = dialog.findViewById(R.id.rg_gender);
+        RadioButton rbMale = dialog.findViewById(R.id.rb_male);
+        RadioButton rbFemale = dialog.findViewById(R.id.rb_female);
+        RadioButton rbOther = dialog.findViewById(R.id.rb_other);
+        Button btnConfirm = dialog.findViewById(R.id.btn_confirm_gender);
+
+        String currentGender = tvGender.getText().toString().trim();
+        if (currentGender.equalsIgnoreCase("Nam")) rbMale.setChecked(true);
+        else if (currentGender.equalsIgnoreCase("Nữ")) rbFemale.setChecked(true);
+        else if (currentGender.equalsIgnoreCase("Khác")) rbOther.setChecked(true);
+
+        btnConfirm.setOnClickListener(v -> {
+            int selectedId = rgGender.getCheckedRadioButtonId();
+            if (selectedId == -1) {
+                Toast.makeText(this, "Vui lòng chọn giới tính", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            RadioButton selected = dialog.findViewById(selectedId);
+            String gender = selected.getText().toString();
+
+            db.collection("users").document(userId)
+                    .update("gender", gender)
+                    .addOnSuccessListener(aVoid -> {
+                        tvGender.setText(gender);
+                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void showBirthDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_birth);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        NumberPicker npYear = dialog.findViewById(R.id.np_year);
+        NumberPicker npMonth = dialog.findViewById(R.id.np_month);
+        NumberPicker npDay = dialog.findViewById(R.id.np_day);
+        Button btnConfirm = dialog.findViewById(R.id.btn_confirm_date);
+
+        Calendar calendar = Calendar.getInstance();
+        int currentYear = calendar.get(Calendar.YEAR);
+
+        npYear.setMinValue(1950);
+        npYear.setMaxValue(currentYear);
+        npMonth.setMinValue(1);
+        npMonth.setMaxValue(12);
+        npDay.setMinValue(1);
+        npDay.setMaxValue(31);
+
+        String currentBirth = tvBirthday.getText().toString().trim();
+        if (currentBirth.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            try {
+                String[] parts = currentBirth.split("/");
+                npDay.setValue(Integer.parseInt(parts[0]));
+                npMonth.setValue(Integer.parseInt(parts[1]));
+                npYear.setValue(Integer.parseInt(parts[2]));
+            } catch (Exception e) {
+                npYear.setValue(2000);
+                npMonth.setValue(1);
+                npDay.setValue(1);
+            }
+        } else {
+            npYear.setValue(2000);
+            npMonth.setValue(1);
+            npDay.setValue(1);
+        }
+
+        btnConfirm.setOnClickListener(v -> {
+            int day = npDay.getValue();
+            int month = npMonth.getValue();
+            int year = npYear.getValue();
+
+            String date = String.format("%02d/%02d/%04d", day, month, year);
+
+            db.collection("users").document(userId)
+                    .update("birthday", date)
+                    .addOnSuccessListener(aVoid -> {
+                        tvBirthday.setText(date);
+                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 }

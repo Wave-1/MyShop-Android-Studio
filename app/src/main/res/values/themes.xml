@@ -3,7 +3,7 @@
     <style name="Base.Theme.MyShop" parent="Theme.Material3.DayNight.NoActionBar">
 
         <!-- Màu chủ đạo (nếu bạn muốn thay đổi sau này) -->
-<!--         <item name="colorPrimary">@color/lightGrey</item>-->
+        <!--         <item name="colorPrimary">@color/lightGrey</item>-->
 
         <!-- Làm status bar trong suốt -->
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -20,6 +20,10 @@
         <!-- Đảm bảo thanh điều hướng không bị ẩn -->
         <item name="android:windowLightStatusBar">false</item> <!-- false = chữ trắng -->
         <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- 🎯 Fix màu RadioButton / Checkbox -->
+        <item name="colorControlActivated">#FF007A</item>
+
     </style>
 
     <!-- Kế thừa theme này trong AndroidManifest -->
