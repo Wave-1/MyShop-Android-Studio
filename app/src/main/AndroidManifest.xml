@@ -46,6 +46,7 @@
         <activity android:name=".Activities.ManageProductsActivity" />
         <activity android:name=".Activities.ManageCategoriesActivity" />
         <activity android:name=".Activities.AdminOrderDetailActivity" />
+        <activity android:name=".Activities.AdminSettingActivity" />
     </application>
 
 </manifest>

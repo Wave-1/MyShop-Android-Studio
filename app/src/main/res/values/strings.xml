@@ -74,4 +74,11 @@
     <string name="account_info">Thông tin tài khoản</string>
     <string name="account_change_password">Thay đổi mật khẩu</string>
     <string name="payment_method">Phương thức thanh toán</string>
+
+    <string name="manage_voucher">Chương trình khuyến mại</string>
+    <string name="manage_feedback">Phản hồi &amp; góp ý</string>
+    <string name="manage_role">Phân quyền</string>
+    <string name="manage_revenue">Doanh thu</string>
+    <string name="manage_top_product">Sản phẩm bán chạy</string>
+    <string name="sign_out">Đăng xuất</string>
 </resources>

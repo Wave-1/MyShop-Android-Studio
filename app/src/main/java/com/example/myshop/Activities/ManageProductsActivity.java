@@ -119,7 +119,8 @@ public class ManageProductsActivity extends AppCompatActivity {
                 startActivity(new Intent(this, ManageOrdersActivity.class));
                 return true;
             } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
+                Intent intent = new Intent(this, AdminSettingActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;
