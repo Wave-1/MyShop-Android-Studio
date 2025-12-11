@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Màu nền (sẽ bị ghi đè bởi backgroundTint trong layout, nhưng để mặc định là trắng) -->
+<!--    <solid android:color="@color/white" />-->
+    <gradient
+        android:angle="45"
+        android:endColor="#FF8F00"
+        android:startColor="#FFC107"
+        android:type="linear" />
+
+    <!-- Bo tròn 2 góc dưới để tạo hiệu ứng cong -->
+    <corners
+        android:bottomLeftRadius="32dp"
+        android:bottomRightRadius="32dp"
+        android:topLeftRadius="0dp"
+        android:topRightRadius="0dp" />
+</shape>

@@ -8,7 +8,6 @@
     android:fitsSystemWindows="true"
     tools:context=".Activities.CartActivity">
 
-    <!-- 1. Thanh tiêu đề (App Bar) hiện đại hơn -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"

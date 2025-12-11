@@ -19,9 +19,14 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/bg_header_gradient"
+            android:textSize="20sp"
+            android:textStyle="bold"
             app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnPrimary"
             app:title="Theo dõi đơn hàng"
-            app:titleTextColor="@color/black" />
+            app:titleCentered="true"
+            app:titleTextColor="?attr/colorOnPrimary"  />
 
         <HorizontalScrollView
             android:id="@+id/filterScroll"
@@ -54,9 +59,14 @@
                     android:text="Chờ giao hàng" />
 
                 <Button
-                    android:id="@+id/btnCompleted"
+                    android:id="@+id/btnDelivered"
                     style="@style/CleanFilterButton"
                     android:text="Đã giao" />
+
+                <Button
+                    android:id="@+id/btnCompleted"
+                    style="@style/CleanFilterButton"
+                    android:text="Hoàn thành" />
 
                 <Button
                     android:id="@+id/btnCancelled"

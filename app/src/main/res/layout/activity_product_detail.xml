@@ -219,75 +219,12 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- ... Toàn bộ nội dung phần đánh giá và sản phẩm liên quan của bạn giữ nguyên ... -->
-                <!-- ==== KHUNG NHẬP ĐÁNH GIÁ (SẼ BỊ ẨN/HIỆN) ==== -->
-                <LinearLayout
-                    android:id="@+id/reviewInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone"> <!-- Bị ẩn theo mặc định -->
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:text="Viết đánh giá của bạn"
-                        android:textColor="@color/black"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <RatingBar
-                        android:id="@+id/ratingBar"
-                        style="?android:attr/ratingBarStyleIndicator"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:isIndicator="false"
-                        android:numStars="5"
-                        android:rating="5"
-                        android:stepSize="1"
-                        android:theme="@style/RatingBar" />
-
-                    <EditText
-                        android:id="@+id/edtComment"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:background="@drawable/bg_edittext_comment"
-                        android:gravity="top"
-                        android:hint="Nhập đánh giá của bạn..."
-                        android:inputType="textMultiLine"
-                        android:minLines="3"
-                        android:padding="10dp"
-                        android:textColor="@color/black"
-                        android:textSize="14sp" />
-
-                    <Button
-                        android:id="@+id/btnSubmitReview"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:backgroundTint="#4CAF50"
-                        android:text="Gửi đánh giá"
-                        android:textColor="@color/white" />
-
-                    <!-- Dấu phân cách -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="16dp"
-                        android:background="#E0E0E0" />
-
-                </LinearLayout>
-
                 <!-- ==== DANH SÁCH ĐÁNH GIÁ (LUÔN HIỂN THỊ) ==== -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:text="Đánh giá từ người mua khác"
+                    android:text="Đánh giá từ người mua"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />

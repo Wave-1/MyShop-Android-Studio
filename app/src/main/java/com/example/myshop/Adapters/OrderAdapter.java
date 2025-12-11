@@ -1,39 +1,29 @@
 package com.example.myshop.Adapters;
 
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.myshop.Activities.AdminOrderDetailActivity;
-import com.example.myshop.Activities.OrderDetailActivity;
-import com.example.myshop.Constants;
+import com.example.myshop.Util.Constants;
 import com.example.myshop.Models.CartModel;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.R;
-import com.google.firebase.Timestamp;
 
-import java.text.DateFormat;
-import java.text.ParseException;
+// ✅ BƯỚC 1: Import class ProductsToReviewAdapter
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> {
@@ -41,6 +31,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     private final ArrayList<OrderModel> orderList;
     private final OnItemClickListener listener;
     private final OnOrderCancelListener cancelListener;
+    private final OnConfirmReceiptListener confirmReceiptListener;
+    private final OnReturnOrderListener returnOrderListener;
+    private final ProductsToReviewAdapter.OnProductReviewClickListener productReviewClickListener;
+
+    // --- Interfaces ---
     public interface OnItemClickListener {
         void onItemClick(OrderModel order);
     }
@@ -48,25 +43,41 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     public interface OnOrderCancelListener {
         void onCancelClick(OrderModel order);
     }
-    public OrderAdapter(Context context, ArrayList<OrderModel> orderList, OnItemClickListener listener, OnOrderCancelListener cancelListener) {
+
+    public interface OnConfirmReceiptListener {
+        void onConfirmReceiptClick(OrderModel order);
+    }
+
+    public interface OnReturnOrderListener {
+        void onReturnOrderClick(OrderModel order);
+    }
+
+    public OrderAdapter(Context context, ArrayList<OrderModel> orderList,
+                        OnItemClickListener listener,
+                        OnOrderCancelListener cancelListener,
+                        OnConfirmReceiptListener confirmReceiptListener,
+                        OnReturnOrderListener returnOrderListener,
+                        ProductsToReviewAdapter.OnProductReviewClickListener productReviewClickListener) {
         this.context = context;
         this.orderList = orderList;
         this.listener = listener;
         this.cancelListener = cancelListener;
+        this.confirmReceiptListener = confirmReceiptListener;
+        this.returnOrderListener = returnOrderListener;
+        this.productReviewClickListener = productReviewClickListener;
     }
 
     @NonNull
     @Override
     public OrderAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_order, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, productReviewClickListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull OrderAdapter.ViewHolder holder, int position) {
         OrderModel order = orderList.get(position);
-        holder.bind(order, listener, cancelListener);
-
+        holder.bind(order, listener, cancelListener, confirmReceiptListener, returnOrderListener);
     }
 
     @Override
@@ -76,14 +87,14 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivProductImage;
-        TextView tvOrderId, tvProductName,
-                tvProductPrice, tvProductQuantity,
-                tvItemCount, tvOrderDate, tvTotalAmount,
-                tvOrderStatus;
+        TextView tvOrderId, tvProductName, tvProductPrice, tvProductQuantity, tvItemCount, tvOrderDate, tvTotalAmount, tvOrderStatus;
         Context context;
-        Button btnCancelOrder, btnViewDetails;
+        Button btnCancelOrder, btnReturnOrder, btnConfirmReceipt;
+        LinearLayout layoutProductInfo, actionButtonsLayout;
+//        RecyclerView recyclerProductsToReview;
+        ProductsToReviewAdapter.OnProductReviewClickListener productReviewClickListener;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView, ProductsToReviewAdapter.OnProductReviewClickListener productReviewClickListener) {
             super(itemView);
             this.context = itemView.getContext();
             ivProductImage = itemView.findViewById(R.id.ivProductImage);
@@ -96,11 +107,18 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvOrderDate = itemView.findViewById(R.id.tvOrderDate);
             tvTotalAmount = itemView.findViewById(R.id.tvTotalAmount);
 
+//            recyclerProductsToReview = itemView.findViewById(R.id.recyclerProductsToReview);
+            actionButtonsLayout = itemView.findViewById(R.id.actionButtonsLayout);
+            this.productReviewClickListener = productReviewClickListener;
+
             btnCancelOrder = itemView.findViewById(R.id.btnCancelOrder);
-            btnViewDetails = itemView.findViewById(R.id.btnViewDetails);
+            btnReturnOrder = itemView.findViewById(R.id.btnReturnOrder);
+            btnConfirmReceipt = itemView.findViewById(R.id.btnConfirmReceipt);
+            layoutProductInfo = itemView.findViewById(R.id.layoutProductInfo);
         }
 
-        public void bind(final OrderModel order, final OnItemClickListener listener, final OnOrderCancelListener cancelListener) {
+        public void bind(final OrderModel order, final OnItemClickListener listener, final OnOrderCancelListener cancelListener, final OnConfirmReceiptListener confirmReceiptListener, final OnReturnOrderListener returnOrderListener) {
+
             if (order == null || order.getItems() == null || order.getItems().isEmpty()) {
                 itemView.setVisibility(View.GONE);
                 return;
@@ -108,6 +126,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             itemView.setVisibility(View.VISIBLE);
             String status = order.getStatus();
 
+            // --- Bind dữ liệu chung ---
             String displayOrderId = order.getOrderId();
             if (displayOrderId != null && displayOrderId.length() > 8) {
                 displayOrderId = displayOrderId.substring(0, 8);
@@ -123,11 +142,13 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
             int backgroundColor = context.getColor(R.color.holo_orange_light);
             if (Constants.ORDER_STATUS_SHIPPING.equals(status)) {
-                backgroundColor = context.getColor(R.color.button_secondary); // Màu xanh dương
+                backgroundColor = context.getColor(R.color.button_secondary);
+            } else if ("Đã giao".equals(status)) { // Dùng chuỗi để so sánh
+                backgroundColor = context.getColor(R.color.holo_blue_dark);
             } else if (Constants.ORDER_STATUS_COMPLETED.equals(status)) {
-                backgroundColor = context.getColor(R.color.button_primary); // Màu xanh lá
+                backgroundColor = context.getColor(R.color.button_primary);
             } else if (Constants.ORDER_STATUS_CANCELLED.equals(status)) {
-                backgroundColor = context.getColor(R.color.holo_red_dark); // Màu xám
+                backgroundColor = context.getColor(R.color.holo_red_dark);
             }
             GradientDrawable background = (GradientDrawable) tvOrderStatus.getBackground();
             background.setColor(backgroundColor);
@@ -136,9 +157,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             tvProductName.setText(firstItem.getName());
             tvProductPrice.setText(String.format("%,.0f ₫", firstItem.getPrice()));
             tvProductQuantity.setText("x " + firstItem.getQuantity());
-            Glide.with(context)
-                    .load(firstItem.getImage())
-                    .into(ivProductImage);
+            Glide.with(context).load(firstItem.getImage()).into(ivProductImage);
 
             int totalItems = order.getItems().size();
             if (totalItems > 1) {
@@ -147,22 +166,47 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             } else {
                 tvItemCount.setVisibility(View.GONE);
             }
-            if ("Đang xử lý".equalsIgnoreCase(order.getStatus())){
-                btnCancelOrder.setVisibility(View.VISIBLE);
+
+            // --- LOGIC HIỂN THỊ DỰA TRÊN TRẠNG THÁI ---
+            if (Constants.ORDER_STATUS_COMPLETED.equalsIgnoreCase(status)) {
+                // TRẠNG THÁI "HOÀN THÀNH": HIỂN THỊ DANH SÁCH SẢN PHẨM ĐỂ ĐÁNH GIÁ
+                actionButtonsLayout.setVisibility(View.GONE);
+//                recyclerProductsToReview.setVisibility(View.VISIBLE);
+
+                ProductsToReviewAdapter productsAdapter = new ProductsToReviewAdapter(order.getItems(), order.getOrderId(), productReviewClickListener);
+//                recyclerProductsToReview.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
+//                recyclerProductsToReview.setAdapter(productsAdapter);
+//                recyclerProductsToReview.setNestedScrollingEnabled(false); // Quan trọng
+
             } else {
+                // CÁC TRẠNG THÁI KHÁC: HIỂN THỊ CÁC NÚT HÀNH ĐỘNG
+                actionButtonsLayout.setVisibility(View.VISIBLE);
+//                recyclerProductsToReview.setVisibility(View.GONE);
+
                 btnCancelOrder.setVisibility(View.GONE);
+                btnReturnOrder.setVisibility(View.GONE);
+                btnConfirmReceipt.setVisibility(View.GONE);
+
+                if (Constants.ORDER_STATUS_PROCESSING.equalsIgnoreCase(status)) {
+                    btnCancelOrder.setVisibility(View.VISIBLE);
+                } else if ("Đã giao".equalsIgnoreCase(status)) { // ✅ BƯỚC 5: Sửa lại cách so sánh trạng thái
+                    btnReturnOrder.setVisibility(View.VISIBLE);
+                    btnConfirmReceipt.setVisibility(View.VISIBLE);
+                }
             }
 
-            btnCancelOrder.setOnClickListener(v -> {
-                if (cancelListener != null){
-                    cancelListener.onCancelClick(order);
-                }
+            // --- Gán sự kiện Click ---
+            layoutProductInfo.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(order);
             });
-
-            btnViewDetails.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onItemClick(order);
-                }
+            btnCancelOrder.setOnClickListener(v -> {
+                if (cancelListener != null) cancelListener.onCancelClick(order);
+            });
+            btnReturnOrder.setOnClickListener(v -> {
+                if (returnOrderListener != null) returnOrderListener.onReturnOrderClick(order);
+            });
+            btnConfirmReceipt.setOnClickListener(v -> {
+                if (confirmReceiptListener != null) confirmReceiptListener.onConfirmReceiptClick(order);
             });
         }
     }

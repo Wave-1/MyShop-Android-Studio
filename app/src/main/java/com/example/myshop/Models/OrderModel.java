@@ -14,6 +14,7 @@ public class OrderModel implements Serializable {
     private String status;
     private double totalAmount;
     private String cancellationReason;
+    private String paymentMethod;
 
     // --- Đối tượng lồng nhau ---
     private AddressModel address;
@@ -69,6 +70,13 @@ public class OrderModel implements Serializable {
 
     public void setCancellationReason(String cancellationReason) {
         this.cancellationReason = cancellationReason;
+    }
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
     public AddressModel getAddress() {

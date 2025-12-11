@@ -76,7 +76,7 @@
             android:src="@drawable/ic_delete"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="#BDBDBD" />
+            app:tint="@color/holo_red_light" />
 
         <!-- 5. Khối tăng/giảm số lượng -->
         <LinearLayout

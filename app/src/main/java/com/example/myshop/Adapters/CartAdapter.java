@@ -134,7 +134,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         db.collection("users")
                 .document(uid)
                 .collection("cart")
-                .document(item.getId())
+                .document(item.getOrderId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     if (position < cartList.size()) {
@@ -155,7 +155,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         db.collection("users")
                 .document(uid)
                 .collection("cart")
-                .document(item.getId())
+                .document(item.getOrderId())
                 .update("quantity", newQuantity)
                 .addOnSuccessListener(aVoid -> {
                     item.setQuantity(newQuantity);

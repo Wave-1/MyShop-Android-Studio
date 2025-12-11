@@ -39,28 +39,6 @@ public class ManageUsersActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         db = FirebaseFirestore.getInstance();
-        bottomNav.setSelectedItemId(R.id.nav_users);
-        // --- Bottom Navigation ---
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(this, ManageProductsActivity.class));
-                return true; // đang ở trang này
-            } else if (id == R.id.nav_users) {
-                return true;
-            } else if (id == R.id.nav_categories) {
-                startActivity(new Intent(this, ManageCategoriesActivity.class));
-                return true;
-            } else if (id == R.id.nav_orders) {
-                startActivity(new Intent(this, ManageOrdersActivity.class));
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
-        });
-
         loadUsers();
     }
 

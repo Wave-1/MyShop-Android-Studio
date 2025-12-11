@@ -9,24 +9,38 @@
     android:background="#F8F9FA"
     tools:context=".Activities.ManageCategoriesActivity">
 
-    <!-- 🔹 Tiêu đề -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="0dp"
+    <RelativeLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Quản lý danh mục"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:padding="16dp"
+        android:background="#FFFFFF"
         android:elevation="3dp"
-        android:gravity="center"
         android:paddingTop="20dp"
         android:paddingBottom="12dp"
-        android:background="@color/white"
-        android:textColor="@color/black"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mở menu"
+            android:src="@drawable/ic_menu"
+            app:tint="#1C2A44" />
+
+        <TextView
+            android:id="@+id/tvAdminTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Quản lý danh mục"
+            android:textColor="#1C2A44"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
 
     <!-- 🔹 Danh sách danh mục -->
     <androidx.recyclerview.widget.RecyclerView
@@ -36,7 +50,7 @@
         android:clipToPadding="false"
         android:scrollbars="vertical"
         tools:listitem="@layout/item_category_manage"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader"
         app:layout_constraintBottom_toTopOf="@id/btnAddCategory"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -50,22 +64,8 @@
         android:layout_margin="16dp"
         android:backgroundTint="@color/button_primary"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- 🔹 Thanh điều hướng dưới cùng -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/white"
-        android:elevation="8dp"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_admin"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

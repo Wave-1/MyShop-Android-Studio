@@ -1,7 +1,5 @@
 package com.example.myshop.Activities;
 
-import static java.security.AccessController.getContext;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -31,13 +29,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ManageCategoriesActivity extends AppCompatActivity {
+public class ManageCategoriesActivity extends BaseAdminActivity {
     private RecyclerView recyclerCategories;
     private Button btnAddCategory;
     private FirebaseFirestore db;
     private List<CategoryModel> categoryList;
     private CategoryManageAdapter adapter;
-    BottomNavigationView bottomNav;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +44,6 @@ public class ManageCategoriesActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         recyclerCategories = findViewById(R.id.recyclerCategories);
         btnAddCategory = findViewById(R.id.btnAddCategory);
-        bottomNav = findViewById(R.id.bottomNav);
         categoryList = new ArrayList<>();
         adapter = new CategoryManageAdapter(this, categoryList, this::confirmDeleteCategory);
 
@@ -56,27 +52,12 @@ public class ManageCategoriesActivity extends AppCompatActivity {
 
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
 
-        bottomNav.setSelectedItemId(R.id.nav_categories);
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(this, ManageProductsActivity.class));
-                return true;
-            } else if (id == R.id.nav_users) {
-                startActivity(new Intent(this, ManageUsersActivity.class));
-                return true;
-            } else if (id == R.id.nav_categories) {
-                return true;
-            } else if (id == R.id.nav_orders) {
-                startActivity(new Intent(this, ManageOrdersActivity.class));
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
-        });
         loadCategories();
+    }
+
+    @Override
+    protected int getCurrentMenuId() {
+        return R.id.nav_admin_categories;
     }
 
     private void loadCategories() {

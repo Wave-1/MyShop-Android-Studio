@@ -7,23 +7,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myshop.Adapters.OrderAdapter;
+import com.example.myshop.Util.Constants;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.R;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -31,14 +27,13 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManageOrdersActivity extends AppCompatActivity {
+public class ManageOrdersActivity extends BaseAdminActivity {
 
     private RecyclerView recyclerOrders;
     private ProgressBar progressBar;
     private TextView tvNoOrders;
-    private BottomNavigationView bottomNav;
 
-    private Button btnAll, btnProcessing, btnShipping, btnCompleted, btnCancelled;
+    private Button btnAll, btnProcessing, btnShipping, btnDelivered, btnCompleted, btnCancelled;
     private Button selectedButton;
     private List<Button> filterButtons = new ArrayList<>();
     private FirebaseFirestore db;
@@ -58,117 +53,57 @@ public class ManageOrdersActivity extends AppCompatActivity {
         recyclerOrders = findViewById(R.id.recyclerOrders);
         progressBar = findViewById(R.id.progressBar);
         tvNoOrders = findViewById(R.id.tvNoOrders);
-        bottomNav = findViewById(R.id.bottomNav);
 
         btnAll = findViewById(R.id.btnAll);
         btnProcessing = findViewById(R.id.btnProcessing);
         btnShipping = findViewById(R.id.btnShipping);
+        btnDelivered = findViewById(R.id.btnDelivered);
         btnCompleted = findViewById(R.id.btnCompleted);
         btnCancelled = findViewById(R.id.btnCancelled);
 
-//        View rootLayout = findViewById(R.id.rootLayout);
-//
-//        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
-//            // Lấy khoảng trống của các thanh hệ thống (status bar, navigation bar)
-//            int systemBarsInsetsTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-//            int systemBarsInsetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-//
-//            // Áp dụng padding cho layout gốc
-//            v.setPadding(v.getPaddingLeft(), systemBarsInsetsTop, v.getPaddingRight(), systemBarsInsetsBottom);
-//
-//            // Trả về insets mặc định để các View con (như AppBarLayout) có thể tự xử lý
-//            return WindowInsetsCompat.CONSUMED;
-//        });
-        applyBottomNavigationPadding();
+        String initialStatus = getIntent().getStringExtra(Constants.INTENT_KEY_ORDER_STATUS);
+
+        if (initialStatus == null) {
+            initialStatus = Constants.ORDER_STATUS_ALL;
+        }
+
         setupRecyclerView();
         setupFilterButtons();
-        setupBottomNavigation();
-        selectButton(btnAll);
-
+        filterOrdersByStatus(initialStatus, true);;
         loadOrders(currentStatus);
     }
 
-    private void applyBottomNavigationPadding() {
-        bottomNav = findViewById(R.id.bottomNav);
-        recyclerOrders = findViewById(R.id.recyclerOrders);
-
-        if (bottomNav == null || recyclerOrders == null) {
-            return;
-        }
-
-        bottomNav.post(() -> {
-            int navHeight = bottomNav.getHeight();
-
-            int paddingLeft = recyclerOrders.getPaddingLeft();
-            int paddingTop = recyclerOrders.getPaddingTop();
-            int paddingRight = recyclerOrders.getPaddingRight();
-
-            recyclerOrders.setPadding(paddingLeft, paddingTop, paddingRight, navHeight);
-        });
+    @Override
+    protected int getCurrentMenuId() {
+        return R.id.nav_admin_orders;
     }
 
-    private void setupBottomNavigation() {
-        bottomNav.setSelectedItemId(R.id.nav_orders);
-        // --- Bottom Navigation ---
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(this, ManageProductsActivity.class));
-                return true;
-            } else if (id == R.id.nav_users) {
-                startActivity(new Intent(this, ManageUsersActivity.class));
-                return true;
-            } else if (id == R.id.nav_categories) {
-                startActivity(new Intent(this, ManageCategoriesActivity.class));
-                return true;
-            } else if (id == R.id.nav_orders) {
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
-        });
+    private void filterOrdersByStatus(String status, boolean isInitial) {
+        if (!isInitial && status.equals(currentStatus)) {
+            return;
+        }
+        currentStatus = status;
+        updateFilterButtons(status);
+        loadOrders(status);
+    }
+
+    private void updateFilterButtons(String activeStatus) {
+        btnAll.setSelected(Constants.ORDER_STATUS_ALL.equals(activeStatus));
+        btnProcessing.setSelected(Constants.ORDER_STATUS_PROCESSING.equals(activeStatus));
+        btnShipping.setSelected(Constants.ORDER_STATUS_SHIPPING.equals(activeStatus));
+        btnDelivered.setSelected(Constants.ORDER_STATUS_DELIVERED.equals(activeStatus));
+        btnCompleted.setSelected(Constants.ORDER_STATUS_COMPLETED.equals(activeStatus));
+        btnCancelled.setSelected(Constants.ORDER_STATUS_CANCELLED.equals(activeStatus));
     }
 
     // Bộ lọc theo trạng thái
     private void setupFilterButtons() {
-        filterButtons.add(btnAll);
-        filterButtons.add(btnProcessing);
-        filterButtons.add(btnShipping);
-        filterButtons.add(btnCompleted);
-        filterButtons.add(btnCancelled);
-
-        btnAll.setOnClickListener(v -> {
-            selectButton(btnAll);
-            currentStatus = "Tất cả";
-            loadOrders(currentStatus);
-        });
-
-        btnProcessing.setOnClickListener(v -> {
-            selectButton(btnProcessing);
-            currentStatus = "Đang xử lý";
-            loadOrders(currentStatus);
-        });
-
-        btnShipping.setOnClickListener(v -> {
-            selectButton(btnShipping);
-            currentStatus = "Chờ giao hàng";
-            loadOrders(currentStatus);
-        });
-
-        btnCompleted.setOnClickListener(v -> {
-            selectButton(btnCompleted);
-            currentStatus = "Đã giao";
-            loadOrders(currentStatus);
-        });
-
-        btnCancelled.setOnClickListener(v -> {
-            selectButton(btnCancelled);
-            currentStatus = "Đã hủy";
-            loadOrders(currentStatus);
-        });
-
+        btnAll.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_ALL, false));
+        btnProcessing.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_PROCESSING, false));
+        btnShipping.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_SHIPPING, false));
+        btnDelivered.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_DELIVERED, false));
+        btnCompleted.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_COMPLETED, false));
+        btnCancelled.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_CANCELLED, false));
     }
 
     private void selectButton(Button btnToSelect) {
@@ -187,7 +122,10 @@ public class ManageOrdersActivity extends AppCompatActivity {
                     Intent intent = new Intent(this, AdminOrderDetailActivity.class);
                     intent.putExtra("ORDER_OBJECT", order);
                     startActivityForResult(intent, UPDATE_ORDER_REQUEST_CODE);
-                }, null
+                }, null,
+                null,
+                null,
+                null
         );
         recyclerOrders.setAdapter(orderAdapter);
     }
@@ -213,10 +151,6 @@ public class ManageOrdersActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Log.e("FirestoreDeserialize", "Lỗi chuyển đổi đơn hàng: " + doc.getId() + ". Nguyên nhân: " + e.getMessage());
                 }
-//                OrderModel order = doc.toObject(OrderModel.class);
-//                String oderId = doc.getId();
-//                order.setOrderId(oderId);
-//                orderList.add(order);
             }
             progressBar.setVisibility(View.GONE);
             if (orderList.isEmpty()) {

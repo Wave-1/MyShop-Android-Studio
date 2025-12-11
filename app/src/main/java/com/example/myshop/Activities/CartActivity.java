@@ -112,7 +112,7 @@ public class CartActivity extends AppCompatActivity {
                         showEmptyCart(false);
                         for (QueryDocumentSnapshot doc : querySnapshot){
                             CartModel item = doc.toObject(CartModel.class);
-                            item.setId(doc.getId());
+                            item.setOrderId(doc.getId());
                             cartList.add(item);
                         }
                     }

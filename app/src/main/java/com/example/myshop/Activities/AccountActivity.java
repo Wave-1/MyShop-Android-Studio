@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.myshop.Constants;
+import com.example.myshop.Util.Constants;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -34,7 +34,7 @@ public class AccountActivity extends AppCompatActivity {
     private FirebaseUser currentUser;
     private static final int REQUEST_LOGIN = 100;
     private static final int REQUEST_REGISTER = 101;
-
+    private boolean isAdmin = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,13 +67,13 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         updateUI();
+//        checkUserRole();
         setupClickListeners();
         setupBottomNavigation();
 
     }
 
     private void setupBottomNavigation() {
-//  Gắn sự kiện Bottom Navigation
         bottomNav.setSelectedItemId(R.id.nav_account);
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -128,17 +128,15 @@ public class AccountActivity extends AppCompatActivity {
         });
 
         // Đã giao
-        findViewById(R.id.status_completed).setOnClickListener(v -> {
-            openOrderTrackingActivity(Constants.ORDER_STATUS_COMPLETED);
+        findViewById(R.id.status_delivered).setOnClickListener(v -> {
+            openOrderTrackingActivity(Constants.ORDER_STATUS_DELIVERED);
 
         });
 
         // Đánh giá
         findViewById(R.id.reviews).setOnClickListener(v -> {
-//            openOrderTrackingActivity("Đang xử lý");
-            Toast.makeText(this, "Đánh giá", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ReviewActivity.class));
         });
-
         // Đã thích
         findViewById(R.id.option_favorites).setOnClickListener(v -> {
             Intent intent = new Intent(this, FavoritesActivity.class);
@@ -146,6 +144,11 @@ public class AccountActivity extends AppCompatActivity {
         });
         findViewById(R.id.option_address).setOnClickListener(v -> {
             Intent intent = new Intent(AccountActivity.this, AddressActivity.class);
+            startActivity(intent);
+        });
+
+        findViewById(R.id.option_loyalty).setOnClickListener(v -> {
+            Intent intent = new Intent(AccountActivity.this, LoyaltyActivity.class);
             startActivity(intent);
         });
 

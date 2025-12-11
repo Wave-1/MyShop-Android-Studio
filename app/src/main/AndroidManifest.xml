@@ -2,9 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"
-        package="com.example.myshop"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        package="com.example.myshop"
+        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"
@@ -40,11 +41,22 @@
         <activity android:name=".Activities.OrderDetailActivity" />
         <activity android:name=".Activities.AddEditAddressActivity" />
         <activity android:name=".Activities.FavoritesActivity" />
+        <activity android:name=".Activities.ReviewActivity" />
+        <activity android:name=".Activities.ProductReviewActivity" />
+        <activity android:name=".Activities.VoucherActivity" />
+        <activity android:name=".Activities.LoyaltyActivity" />
+        <activity android:name=".Activities.BaseAdminActivity" />
+
 
         <activity android:name=".Activities.ManageOrdersActivity" />
         <activity android:name=".Activities.ManageUsersActivity" />
         <activity android:name=".Activities.ManageProductsActivity" />
         <activity android:name=".Activities.ManageCategoriesActivity" />
+        <activity android:name=".Activities.ManageRankConfigActivity" />
+        <activity android:name=".Activities.ManageVouchersActivity" />
+        <activity android:name=".Activities.AdminAddVoucherActivity"
+            android:exported="false"
+            android:label="Thêm Voucher" />
         <activity android:name=".Activities.AdminOrderDetailActivity" />
     </application>
 

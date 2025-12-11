@@ -18,17 +18,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myshop.Models.ProductModel;
 import com.example.myshop.Adapters.ProductAdminAdapter;
 import com.example.myshop.R;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class ManageProductsActivity extends AppCompatActivity {
+public class ManageProductsActivity extends BaseAdminActivity {
 
     private RecyclerView recyclerProducts;
     private EditText edtSearchAdmin;
@@ -51,7 +52,8 @@ public class ManageProductsActivity extends AppCompatActivity {
     private List<String> categoryList;
     private ArrayAdapter<String> categoryAdapter;
     private ProductAdminAdapter adapter;
-    private BottomNavigationView bottomNav;
+
+
 
     private static final int PICK_IMAGE_REQUEST = 1;
     private Uri selectedImageUri;
@@ -63,7 +65,6 @@ public class ManageProductsActivity extends AppCompatActivity {
 
         edtSearchAdmin = findViewById(R.id.edtSearchAdmin);
         recyclerProducts = findViewById(R.id.recyclerProductsAd);
-        bottomNav = findViewById(R.id.bottomNav);
 
         findViewById(R.id.btnAddProductAd).setOnClickListener(v -> showAddDialog());
 
@@ -102,29 +103,6 @@ public class ManageProductsActivity extends AppCompatActivity {
             Intent intent = new Intent(ManageProductsActivity.this, ManageCategoriesActivity.class);
             startActivity(intent);
         });
-
-
-        // --- Bottom Navigation ---
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                return true; // đang ở trang này
-            } else if (id == R.id.nav_users) {
-                startActivity(new Intent(this, ManageUsersActivity.class));
-                return true;
-            } else if (id == R.id.nav_categories) {
-                startActivity(new Intent(this, ManageCategoriesActivity.class));
-                return true;
-            } else if (id == R.id.nav_orders) {
-                startActivity(new Intent(this, ManageOrdersActivity.class));
-                return true;
-            } else if (id == R.id.nav_settings) {
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            }
-            return false;
-        });
-
 
         adapter = new ProductAdminAdapter(this, productModelList, new ProductAdminAdapter.OnItemClickListener() {
             @Override
@@ -349,34 +327,6 @@ public class ManageProductsActivity extends AppCompatActivity {
         builder.show();
     }
 
-//    private void showAddCategoryDialog() {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle("Thêm dang mục mới");
-//
-//        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_category, null);
-//        EditText edtNewCategoryName = view.findViewById(R.id.edtNewCategoryName);
-//
-//        builder.setView(view);
-//        builder.setPositiveButton("Thêm", (dialog, which) -> {
-//            String categoryName = edtNewCategoryName.getText().toString().trim();
-//            if (categoryName.isEmpty()) {
-//                Toast.makeText(this, "Vui lòng nhập tên danh mục", Toast.LENGTH_SHORT).show();
-//                return;
-//            }
-//            Map<String, Object> categoryData = new HashMap<>();
-//            categoryData.put("name", categoryName);
-//
-//            db.collection("categories").add(categoryData)
-//                    .addOnSuccessListener(documentReference -> {
-//                        Toast.makeText(this, "Đã thêm danh mục: " + categoryName, Toast.LENGTH_SHORT).show();
-//                        loadCategories();
-//                    })
-//                    .addOnFailureListener(e -> Toast.makeText(this, "Lỗi: " + e, Toast.LENGTH_SHORT).show());
-//        });
-//        builder.setNegativeButton("Hủy", null);
-//        builder.show();
-//    }
-
     private void showEditDialog(ProductModel productModel) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Sửa sản phẩm");
@@ -456,5 +406,10 @@ public class ManageProductsActivity extends AppCompatActivity {
         });
         builder.setNegativeButton("Hủy", null);
         builder.show();
+    }
+
+    @Override
+    protected int getCurrentMenuId() {
+        return R.id.nav_admin_home;
     }
 }

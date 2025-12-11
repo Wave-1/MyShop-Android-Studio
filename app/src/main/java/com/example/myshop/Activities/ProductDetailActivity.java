@@ -57,10 +57,9 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView imgProduct, ivBack, ivFavorite;
     private TextView tvProductName, tvProductPrice, tvProductOriginalPrice, tvSalePercent, tvNoReviews;
-    private Button btnAddToCart, btnBuyNow, btnSubmitReview;
-    private RatingBar ratingBar;
-    private EditText edtComment;
-    private LinearLayout reviewInputLayout, descriptionContainer;
+    private Button btnAddToCart, btnBuyNow;
+
+    private LinearLayout descriptionContainer;
     private RecyclerView recyclerReviews, recyclerRelatedProducts;
     private String role, productId, userId;
     private ProductAdapter relatedProductsAdapter;
@@ -117,12 +116,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         });
 
         // Reviews
-        reviewInputLayout = findViewById(R.id.reviewInputLayout);
         tvNoReviews = findViewById(R.id.tvNoReviews);
         recyclerReviews = findViewById(R.id.recyclerReviews);
-        ratingBar = findViewById(R.id.ratingBar);
-        edtComment = findViewById(R.id.edtComment);
-        btnSubmitReview = findViewById(R.id.btnSubmitReview);
 
         btnAddToCart = findViewById(R.id.btnAddToCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);
@@ -135,8 +130,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         recyclerRelatedProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         recyclerRelatedProducts.setAdapter(relatedProductsAdapter);
 
-        reviewInputLayout.setVisibility(View.GONE);
-
         if ("admin".equals(role)) {
             btnAddToCart.setVisibility(View.GONE);
             btnBuyNow.setVisibility(View.GONE);
@@ -144,12 +137,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         } else {
             btnAddToCart.setVisibility(View.VISIBLE);
             btnBuyNow.setVisibility(View.VISIBLE);
-            checkUserCanReview();
         }
-
-        btnSubmitReview.setOnClickListener(v -> {
-            submitReview();
-        });
 
         if (productId != null) {
             db.collection("products").document(productId).get()
@@ -161,17 +149,16 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                                 if (productModel.getImage() != null && !productModel.getImage().isEmpty()) {
                                     Glide.with(this)
-                                            .load(productModel.getImage()) // URL từ Firestore
-                                            .placeholder(R.drawable.bg_image_placeholder) // ảnh tạm khi đang load
-                                            .error(R.drawable.store)       // ảnh nếu load lỗi
+                                            .load(productModel.getImage())
+                                            .placeholder(R.drawable.bg_image_placeholder)
+                                            .error(R.drawable.store)
                                             .into(imgProduct);
                                 }
                                 tvProductName.setText(productModel.getName());
                                 String productName = productModel.getName();
                                 tvToolbarTitle.setText(productName);
                                 tvProductPrice.setText(String.format("%,.0f ₫", productModel.getPrice()));
-//                                tvProductDesc.setText(productModel.getDescription() +
-//                                        " - Đây là mô tả chi tiết của " + productModel.getName());
+
                                 renderDescription(productModel.getDescription());
                                 showProductPrice(productModel);
                                 checkFavoriteStatus();
@@ -215,7 +202,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                                                                 Toast.makeText(this, "Lỗi thêm giỏ hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                             });
                                                 } else {
-                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), finalPrice, productModel.getImage(), 1);
+                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), productModel.getImage(), finalPrice, 1);
                                                     db.collection("users")
                                                             .document(uid)
                                                             .collection("cart")
@@ -270,8 +257,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                                                                 Toast.makeText(this, "Lỗi thêm giỏ hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                             });
                                                 } else {
-                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), finalPrice, productModel.getImage(), 1);
-                                                    db.collection("users")
+                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), productModel.getImage(), finalPrice, 1);                                                    db.collection("users")
                                                             .document(uid)
                                                             .collection("cart")
                                                             .document(productModel.getProductId())
@@ -481,77 +467,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         );
         textParams.setMargins(0, 0, 0, 16);
         descriptionContainer.addView(textView, textParams);
-    }
-
-    // ====================== KIỂM TRA QUYỀN ĐÁNH GIÁ ==========================
-    private void checkUserCanReview() {
-        if (userId == null || productId == null) return;
-
-        db.collection("users")
-                .document(userId)
-                .collection("orders")
-                .whereEqualTo("status", "Hoàn tất") // ✅ chỉ lấy đơn hàng đã hoàn tất
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    boolean canReview = false;
-
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        // ✅ Lấy danh sách productIds từ đơn hàng
-                        List<String> productIds = (List<String>) document.get("productIds");
-                        if (productIds != null && productIds.contains(productId)) {
-                            canReview = true;
-                            break;
-                        }
-                    }
-
-                    // ✅ Nếu người dùng đã mua sản phẩm và đơn hàng hoàn tất -> cho phép đánh giá
-                    if (canReview) {
-                        reviewInputLayout.setVisibility(View.VISIBLE);
-                        btnSubmitReview.setVisibility(View.VISIBLE);
-                    } else {
-                        reviewInputLayout.setVisibility(View.GONE);
-                        btnSubmitReview.setVisibility(View.GONE);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
-    }
-
-
-    // ====================== GỬI ĐÁNH GIÁ ==========================
-    private void submitReview() {
-        String comment = edtComment.getText().toString().trim();
-        float rating = ratingBar.getRating();
-
-        if (rating == 0) {
-            Toast.makeText(this, "Vui lòng chọn số sao đánh giá", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (comment.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập nội dung đánh giá", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Map<String, Object> review = new HashMap<>();
-        review.put("userId", userId);
-        review.put("rating", rating);
-        review.put("comment", comment);
-        review.put("timestamp", FieldValue.serverTimestamp());
-
-        db.collection("products")
-                .document(productId)
-                .collection("reviews")
-                .add(review)
-                .addOnSuccessListener(documentReference -> {
-                    Toast.makeText(this, "Đánh giá thành công!", Toast.LENGTH_SHORT).show();
-                    edtComment.setText("");
-                    ratingBar.setRating(0);
-                    loadReviews();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Lỗi gửi đánh giá: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
     }
 
 

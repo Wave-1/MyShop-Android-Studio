@@ -69,7 +69,7 @@ public class ProductActivity extends AppCompatActivity {
         cartLayout = findViewById(R.id.cartLayout);
         tvCartBadge = findViewById(R.id.tvCartBadge);
 
-        progressBar = findViewById(R.id.progressBar);
+//        progressBar = findViewById(R.id.progressBar);
         scrollMain = findViewById(R.id.scrollMain);
 
         btnAll = findViewById(R.id.btnFilterAll);
@@ -410,7 +410,7 @@ public class ProductActivity extends AppCompatActivity {
     }
 
     private void loadProducts() {
-        showLoading(true);
+//        showLoading(true);
         db.collection("products")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -422,24 +422,24 @@ public class ProductActivity extends AppCompatActivity {
                     }
 
                     adapter.setProducts(new ArrayList<>(productModelList));
-                    showLoading(false);
+//                    showLoading(false);
                     adapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
-                    showLoading(false);
+//                    showLoading(false);
                     Toast.makeText(this, "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void showLoading(boolean isLoading) {
-        if (isLoading) {
-            progressBar.setVisibility(View.VISIBLE);
-            scrollMain.setVisibility(View.GONE);
-        } else {
-            scrollMain.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
-        }
-    }
+//    private void showLoading(boolean isLoading) {
+//        if (isLoading) {
+//            progressBar.setVisibility(View.VISIBLE);
+//            scrollMain.setVisibility(View.GONE);
+//        } else {
+//            scrollMain.setVisibility(View.VISIBLE);
+//            progressBar.setVisibility(View.GONE);
+//        }
+//    }
 
     private void loadNewProducts() {
         db.collection("products")

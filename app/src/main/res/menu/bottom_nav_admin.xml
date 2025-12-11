@@ -1,27 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/nav_home"
+        android:id="@+id/nav_admin_home"
         android:icon="@drawable/ic_home"
         android:title="Trang chủ" />
 
-    <item
-        android:id="@+id/nav_users"
-        android:icon="@drawable/ic_users"
-        android:title="Người dùng" />
+<!--    <item-->
+<!--        android:id="@+id/nav_admin_users"-->
+<!--        android:icon="@drawable/ic_users"-->
+<!--        android:title="Người dùng" />-->
 
     <item
-        android:id="@+id/nav_categories"
+        android:id="@+id/nav_admin_voucher"
+        android:icon="@drawable/ic_voucher_2"
+        android:title="Voucher" />
+
+    <item
+        android:id="@+id/nav_admin_categories"
         android:icon="@drawable/ic_category"
         android:title="Danh mục" />
 
     <item
-        android:id="@+id/nav_orders"
+        android:id="@+id/nav_admin_ranks"
+        android:icon="@drawable/ic_star"
+        android:title="Rank" />
+
+    <item
+        android:id="@+id/nav_admin_orders"
         android:icon="@drawable/ic_orders"
         android:title="Đơn hàng" />
 
     <item
-        android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_settings"
-        android:title="Cài đặt" />
+        android:id="@+id/nav_admin_logout"
+        android:icon="@drawable/ic_logout"
+        android:title="Thoát" />
 </menu>

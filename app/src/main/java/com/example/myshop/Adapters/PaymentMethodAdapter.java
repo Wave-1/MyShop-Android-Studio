@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myshop.Models.PaymentMethod;
 import com.example.myshop.R;
-import com.example.myshop.utils.Constant;
+//import com.example.myshop.Utils.Constant;
 
 import java.util.List;
 
@@ -44,23 +44,23 @@ public class PaymentMethodAdapter extends RecyclerView.Adapter<PaymentMethodAdap
         if (paymentMethod == null) return;
 
         // Set icon theo loại phương thức
-        switch (paymentMethod.getId()) {
-            case Constant.TYPE_GOPAY:
-                holder.imgPaymentMethod.setImageResource(R.drawable.ic_gopay);
-                break;
-            case Constant.TYPE_CREDIT:
-                holder.imgPaymentMethod.setImageResource(R.drawable.ic_credit);
-                break;
-            case Constant.TYPE_BANK:
-                holder.imgPaymentMethod.setImageResource(R.drawable.ic_bank);
-                break;
-            case Constant.TYPE_ZALO_PAY:
-                holder.imgPaymentMethod.setImageResource(R.drawable.ic_zalopay);
-                break;
-            default:
-                holder.imgPaymentMethod.setImageResource(R.drawable.ic_gopay);
-                break;
-        }
+//        switch (paymentMethod.getId()) {
+//            case Constant.TYPE_GOPAY:
+//                holder.imgPaymentMethod.setImageResource(R.drawable.ic_gopay);
+//                break;
+//            case Constant.TYPE_CREDIT:
+//                holder.imgPaymentMethod.setImageResource(R.drawable.ic_credit);
+//                break;
+//            case Constant.TYPE_BANK:
+//                holder.imgPaymentMethod.setImageResource(R.drawable.ic_bank);
+//                break;
+//            case Constant.TYPE_ZALO_PAY:
+//                holder.imgPaymentMethod.setImageResource(R.drawable.ic_zalopay);
+//                break;
+//            default:
+//                holder.imgPaymentMethod.setImageResource(R.drawable.ic_gopay);
+//                break;
+//        }
 
         holder.tvName.setText(paymentMethod.getName());
         holder.tvDescription.setText(paymentMethod.getDescription());

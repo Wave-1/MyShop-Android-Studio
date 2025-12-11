@@ -1,94 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 1. DrawerLayout phải là thẻ GỐC (Root) -->
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/rootLayoutAdmin"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA">
+    android:fitsSystemWindows="true"
+    tools:openDrawer="end"> <!-- Dòng này giúp xem trước Drawer trên Design mode -->
 
-    <!-- 🔹 Thanh tiêu đề -->
-    <TextView
-        android:id="@+id/tvAdminTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📦 Quản lý sản phẩm"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#1C2A44"
-        android:gravity="center"
-        android:paddingTop="20dp"
-        android:paddingBottom="12dp"
-        android:background="#FFFFFF"
-        android:elevation="3dp" />
-
-    <!-- 🔸 Thanh tìm kiếm -->
-    <LinearLayout
-        android:id="@+id/searchBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/bg_search_box"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="80dp"
-        android:padding="8dp"
-        android:elevation="2dp">
-
-        <EditText
-            android:id="@+id/edtSearchAdmin"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="🔍 Nhập tên sản phẩm..."
-            android:background="@android:color/transparent"
-            android:padding="10dp"
-            android:textColor="#000000"
-            android:textSize="15sp" />
-
-        <ImageButton
-            android:id="@+id/btnSearchAdmin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_search"
-            android:contentDescription="Tìm sản phẩm"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#1C2A44" />
-    </LinearLayout>
-
-    <!-- 🧾 Danh sách sản phẩm -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerProductsAd"
+    <!-- 2. NỘI DUNG CHÍNH (Giao diện màn hình Admin cũ) -->
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/rootLayoutAdmin"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="140dp"
-        android:paddingHorizontal="10dp"
-        android:paddingBottom="90dp"
-        android:scrollbars="vertical"
-        android:clipToPadding="false" />
+        android:background="#F8F9FA">
 
-    <!-- ➕ Nút thêm sản phẩm -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnAddProductAd"
+        <!-- 🔹 Thanh tiêu đề (Đã sửa để có nút Menu) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFFFF"
+            android:elevation="3dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="12dp">
+
+            <!-- Nút mở Menu (Hamburger Icon) -->
+            <ImageButton
+                android:id="@+id/btnMenu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_menu"
+                android:contentDescription="Mở menu"
+                app:tint="#1C2A44" />
+            <!-- Lưu ý: Bạn cần icon ic_menu (3 gạch ngang) -->
+
+            <TextView
+                android:id="@+id/tvAdminTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="📦 Quản lý sản phẩm"
+                android:textColor="#1C2A44"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <!-- 🔸 Thanh tìm kiếm (Giữ nguyên) -->
+        <LinearLayout
+            android:id="@+id/searchBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="80dp"
+            android:background="@drawable/bg_search_box"
+            android:elevation="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <EditText
+                android:id="@+id/edtSearchAdmin"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="🔍 Nhập tên sản phẩm..."
+                android:padding="10dp"
+                android:textColor="#000000"
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/btnSearchAdmin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Tìm sản phẩm"
+                android:src="@drawable/ic_search"
+                app:tint="#1C2A44" />
+        </LinearLayout>
+
+        <!-- 🧾 Danh sách sản phẩm (Giữ nguyên) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerProductsAd"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:layout_marginTop="140dp"
+            android:paddingHorizontal="10dp"
+            android:paddingBottom="90dp"
+            android:scrollbars="vertical" />
+
+        <!-- ➕ Nút thêm sản phẩm (Giữ nguyên) -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnAddProductAd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="Thêm sản phẩm mới"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="#4CAF50"
+            app:tint="@android:color/white" />
+
+        <!-- ĐÃ XÓA BottomNavigationView Ở ĐÂY -->
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- 3. PHẦN MENU TRƯỢT (NAVIGATION VIEW) -->
+    <!-- Đây là phần menu sẽ trượt ra từ bên trái -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view_admin"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="90dp"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="#4CAF50"
-        app:tint="@android:color/white"
-        android:contentDescription="Thêm sản phẩm mới" />
-
-    <!-- 🔻 Thanh điều hướng -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
         android:background="#FFFFFF"
-        android:elevation="8dp"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_admin" />
+        app:headerLayout="@layout/nav_header_admin"
+        app:menu="@menu/bottom_nav_admin"
+        app:itemIconTint="@color/purple_500"
+        app:itemTextColor="#333333"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

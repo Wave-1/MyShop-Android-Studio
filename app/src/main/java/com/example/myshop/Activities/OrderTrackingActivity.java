@@ -1,7 +1,9 @@
 package com.example.myshop.Activities;
 
+import android.app.ComponentCaller;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,36 +13,49 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.myshop.Constants;
+import com.example.myshop.Adapters.ProductsToReviewAdapter;
+import com.example.myshop.Util.Constants;
+import com.example.myshop.Models.CartModel;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.Adapters.OrderAdapter;
 import com.example.myshop.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class OrderTrackingActivity extends AppCompatActivity implements OrderAdapter.OnOrderCancelListener {
+public class OrderTrackingActivity extends AppCompatActivity implements
+        OrderAdapter.OnOrderCancelListener,
+        OrderAdapter.OnConfirmReceiptListener,
+        OrderAdapter.OnReturnOrderListener,
+        ProductsToReviewAdapter.OnProductReviewClickListener {
     private RecyclerView recyclerOrders;
     private ProgressBar progressBar;
     private LinearLayout emptyLayout;
     private MaterialToolbar toolbar;
-    Button btnProcessing, btnShipping, btnCompleted, btnCancelled;
+    Button btnProcessing, btnShipping, btnCompleted, btnDelivered, btnCancelled;
     private Button selectedButton;
     private FirebaseFirestore db;
     private OrderAdapter orderAdapter;
     private List<OrderModel> orderList;
     private String targetUserId;
     private String currentStatus;
+    private static final int REVIEW_REQUEST_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +66,10 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
         recyclerOrders = findViewById(R.id.recyclerOrders);
         progressBar = findViewById(R.id.progressBar);
         emptyLayout = findViewById(R.id.emptyLayout);
-
+        btnCompleted = findViewById(R.id.btnCompleted);
         btnProcessing = findViewById(R.id.btnProcessing);
         btnShipping = findViewById(R.id.btnShipping);
-        btnCompleted = findViewById(R.id.btnCompleted);
+        btnDelivered = findViewById(R.id.btnDelivered);
         btnCancelled = findViewById(R.id.btnCancelled);
 
         db = FirebaseFirestore.getInstance();
@@ -70,12 +85,10 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
             return;
         }
 
-        filterOrdersByStatus(initialStatus, true);
-
-        setupToolbar();
         setupRecyclerView();
         setupFilterButtons();
-        loadOrders(currentStatus);
+        filterOrdersByStatus(initialStatus, true);
+        setupToolbar();
 
     }
 
@@ -91,6 +104,7 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
     private void updateFilterButtons(String activeStatus) {
         btnProcessing.setSelected(Constants.ORDER_STATUS_PROCESSING.equals(activeStatus));
         btnShipping.setSelected(Constants.ORDER_STATUS_SHIPPING.equals(activeStatus));
+        btnDelivered.setSelected(Constants.ORDER_STATUS_DELIVERED.equals(activeStatus));
         btnCompleted.setSelected(Constants.ORDER_STATUS_COMPLETED.equals(activeStatus));
         btnCancelled.setSelected(Constants.ORDER_STATUS_CANCELLED.equals(activeStatus));
     }
@@ -116,6 +130,7 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
 
         btnProcessing.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_PROCESSING, false));
         btnShipping.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_SHIPPING, false));
+        btnDelivered.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_DELIVERED, false));
         btnCompleted.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_COMPLETED, false));
         btnCancelled.setOnClickListener(v -> filterOrdersByStatus(Constants.ORDER_STATUS_CANCELLED, false));
     }
@@ -127,7 +142,10 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
                     Intent intent = new Intent(OrderTrackingActivity.this, OrderDetailActivity.class);
                     intent.putExtra("ORDER_DETAIL", order);
                     startActivity(intent);
-                }, this
+                }, this,
+                this,
+                this,
+                this
         );
         recyclerOrders.setLayoutManager(new LinearLayoutManager(this));
         recyclerOrders.setAdapter(orderAdapter);
@@ -157,30 +175,93 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     orderList.clear();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        try {
-                            // Cố gắng chuyển đổi document thành đối tượng OrderModel
-                            OrderModel order = doc.toObject(OrderModel.class);
-                            // Rất quan trọng: Gán ID của document vào đối tượng OrderModel
-                            // vì ID không được tự động map.
-                            order.setOrderId(doc.getId());
-                            orderList.add(order);
-                        } catch (Exception e) {
-                            // Nếu chuyển đổi thất bại, ghi lại lỗi và bỏ qua đơn hàng này
-                            // Điều này ngăn ứng dụng bị crash và giúp bạn tìm ra đơn hàng lỗi
-                            android.util.Log.e("FirestoreDeserialize",
-                                    "Lỗi chuyển đổi đơn hàng trong OrderTrackingActivity: " + doc.getId() + ". Nguyên nhân: " + e.getMessage());
+                    if (Constants.ORDER_STATUS_COMPLETED.equals(status)) {
+                        checkReviewStatusForOrders(new ArrayList<>(queryDocumentSnapshots.getDocuments()));
+                    } else {
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                            try {
+                                OrderModel order = doc.toObject(OrderModel.class);
+                                order.setOrderId(doc.getId());
+                                orderList.add(order);
+                            } catch (Exception e) {
+                                Log.e("FirestoreDeserialize",
+                                        "Lỗi chuyển đổi đơn hàng trong OrderTrackingActivity: " + doc.getId() + ". Nguyên nhân: " + e.getMessage());
+                            }
                         }
+                        orderAdapter.notifyDataSetChanged();
+                        showLoading(false);
+                        updateEmptyState();
                     }
-                    orderAdapter.notifyDataSetChanged();
-                    showLoading(false);
-                    updateEmptyState();
 
                 })
                 .addOnFailureListener(e -> {
                     showLoading(false);
                     Toast.makeText(this, "Lỗi tải đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void checkReviewStatusForOrders(List<DocumentSnapshot> documents) {
+        if (documents.isEmpty()) {
+            orderList.clear();
+            orderAdapter.notifyDataSetChanged();
+            showLoading(false);
+            updateEmptyState();
+            return;
+        }
+
+        List<OrderModel> newOrderList = new ArrayList<>();
+        for (DocumentSnapshot doc : documents) {
+            try {
+                OrderModel order = doc.toObject(OrderModel.class);
+                if (order != null) {
+                    order.setOrderId(doc.getId());
+                    newOrderList.add(order);
+                }
+            } catch (Exception e) {
+                Log.e("FirestoreDeserialize", "Lỗi chuyển đổi đơn hàng: " + doc.getId(), e);
+            }
+        }
+
+        db.collectionGroup("reviews")
+                .whereEqualTo("userId", targetUserId)
+                .get()
+                .addOnSuccessListener(reviewSnapshots -> {
+                    Set<String> reviewedProductIds = new HashSet<>();
+                    for (QueryDocumentSnapshot reviewDoc : reviewSnapshots) {
+                        String reviewedId = reviewDoc.getString("productId");
+                        if (reviewedId != null) {
+                            reviewedProductIds.add(reviewedId);
+                        }
+                    }
+
+                    for (OrderModel order : newOrderList) {
+                        if (order.getItems() != null) {
+                            for (CartModel item : order.getItems()) {
+                                if (reviewedProductIds.contains(item.getProductId())) {
+                                    item.setReviewed(true);
+                                } else {
+                                    item.setReviewed(false);
+                                }
+                            }
+                        }
+                    }
+
+                    orderList.clear();
+                    orderList.addAll(newOrderList);
+                    orderAdapter.notifyDataSetChanged();
+                    showLoading(false);
+                    updateEmptyState();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("ReviewCheck", "Lỗi khi kiểm tra trạng thái đánh giá", e);
+                    orderList.clear();
+                    orderList.addAll(newOrderList);
+                    orderAdapter.notifyDataSetChanged();
+                    showLoading(false);
+                    updateEmptyState();
+                });
+
+
     }
 
     private void updateEmptyState() {
@@ -215,7 +296,7 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
         RadioButton rbReasonOther = dialog.findViewById(R.id.rbReasonOther);
 
         rgReasons.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.rbReasonOther){
+            if (checkedId == R.id.rbReasonOther) {
                 etOtherReason.setVisibility(View.VISIBLE);
             } else {
                 etOtherReason.setVisibility(View.GONE);
@@ -227,43 +308,92 @@ public class OrderTrackingActivity extends AppCompatActivity implements OrderAda
             String reason = "";
             int selectedId = rgReasons.getCheckedRadioButtonId();
 
-            if (selectedId == -1){
+            if (selectedId == -1) {
                 Toast.makeText(this, "Vui lòng chọn một lý do", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (selectedId == R.id.rbReasonOther){
+            if (selectedId == R.id.rbReasonOther) {
                 reason = etOtherReason.getText().toString().trim();
-                if (reason.isEmpty()){
+                if (reason.isEmpty()) {
                     Toast.makeText(this, "Vui lòng nhập lý do của bạn", Toast.LENGTH_SHORT).show();
                     return;
                 }
-            }else {
+            } else {
                 RadioButton selectedRadioButton = dialog.findViewById(selectedId);
                 reason = selectedRadioButton.getText().toString();
             }
-            cancelOrderInFirestore(order, reason);
+            updateOrderStatus(order.getOrderId(), Constants.ORDER_STATUS_CANCELLED, "cancellationReason", reason);
             dialog.dismiss();
         });
         dialog.show();
     }
 
-    private void cancelOrderInFirestore(OrderModel orderCancel, String reason) {
-        showLoading(true);
-        db.collection("users")
-                .document(targetUserId)
-                .collection("orders")
-                .document(orderCancel.getOrderId())
-                .update("status", Constants.ORDER_STATUS_CANCELLED,
-                        "cancellationReason", reason)
-                .addOnSuccessListener(aVoid -> {
-                   Toast.makeText(this, "Đã hủy đơn hàng thành công", Toast.LENGTH_SHORT).show();
-                   loadOrders(currentStatus);
-                })
-                .addOnFailureListener(e -> {
-                    showLoading(false);
-                    Toast.makeText(this, "Lỗi khi hủy đơn hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+    @Override
+    public void onConfirmReceiptClick(OrderModel order) {
+        updateOrderStatus(order.getOrderId(), Constants.ORDER_STATUS_COMPLETED, null, null);
+    }
 
+    @Override
+    public void onReturnOrderClick(OrderModel order) {
+        Toast.makeText(this, "Chức năng Trả hàng đang được phát triển.", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onProductReviewClick(CartModel product, String orderId) {
+        Intent intent = new Intent(this, ProductReviewActivity.class);
+        intent.putExtra("PRODUCT_TO_REVIEW", product);
+        intent.putExtra("ORDER_ID", orderId);
+        startActivityForResult(intent, REVIEW_REQUEST_CODE);
+    }
+
+    private void updateOrderStatus(String orderId, String newStatus, String reasonField, Object reasonValue) {
+        if (orderId == null) {
+            Toast.makeText(this, "Lỗi: ID đơn hàng không hợp lệ.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showLoading(true);
+        CollectionReference collectionRef = db.collection("users").document(targetUserId).collection("orders");
+
+        if (reasonField != null && reasonValue != null) {
+            // Cập nhật với lý do (dùng cho hủy đơn)
+            collectionRef.document(orderId)
+                    .update("status", newStatus, reasonField, reasonValue)
+                    .addOnSuccessListener(aVoid -> handleUpdateSuccess(newStatus))
+                    .addOnFailureListener(this::handleUpdateFailure);
+        } else {
+            // Cập nhật chỉ trạng thái
+            collectionRef.document(orderId)
+                    .update("status", newStatus)
+                    .addOnSuccessListener(aVoid -> handleUpdateSuccess(newStatus))
+                    .addOnFailureListener(this::handleUpdateFailure);
+        }
+    }
+
+    private void handleUpdateSuccess(String updatedStatus) {
+        Toast.makeText(this, "Đã cập nhật trạng thái đơn hàng", Toast.LENGTH_SHORT).show();
+        if (Constants.ORDER_STATUS_COMPLETED.equals(updatedStatus)) {
+            filterOrdersByStatus(Constants.ORDER_STATUS_COMPLETED, false);
+        } else {
+            loadOrders(currentStatus);
+        }
+    }
+
+    private void handleUpdateFailure(Exception e) {
+        showLoading(false);
+        Toast.makeText(this, "Lỗi khi cập nhật: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data, @NonNull ComponentCaller caller) {
+        super.onActivityResult(requestCode, resultCode, data, caller);
+        if (requestCode == REVIEW_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Cảm ơn bạn. Đang cập nhật danh sách...", Toast.LENGTH_SHORT).show();
+                if (currentStatus != null) {
+                    loadOrders(currentStatus);
+                }
+            }
+        }
     }
 }

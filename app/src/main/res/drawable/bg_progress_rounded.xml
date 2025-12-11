@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Nền của thanh Progress (Màu xám nhạt) -->
+    <item android:id="@android:id/background">
+        <shape>
+            <corners android:radius="8dp" />
+            <solid android:color="#EEEEEE" />
+        </shape>
+    </item>
+
+    <!-- 2. Phần tiến trình đã đạt được (Màu xanh hoặc tím) -->
+    <item android:id="@android:id/progress">
+        <scale android:scaleWidth="100%">
+            <shape>
+                <corners android:radius="8dp" />
+                <!-- Bạn có thể đổi màu này thành màu tím (@color/purple_500) hoặc xanh lá -->
+                <solid android:color="#4CAF50" />
+            </shape>
+        </scale>
+    </item>
+
+</layer-list>
