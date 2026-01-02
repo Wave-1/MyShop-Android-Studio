@@ -1,6 +1,7 @@
 package com.example.myshop.Activities;
 
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +17,7 @@ import com.example.myshop.Adapters.OrderDetailAdapter;
 import com.example.myshop.Models.AddressModel;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.R;
+import com.example.myshop.Util.Constants;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -66,16 +68,17 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     private void displayOrderStatus() {
         recyclerProducts.setLayoutManager(new LinearLayoutManager(this));
-        orderDetailAdapter = new com.example.myshop.Adapters.OrderDetailAdapter(
+        orderDetailAdapter = new OrderDetailAdapter(
                 this,
                 currentOrder.getItems(),
-                currentOrder.getStatus(), // Truyền trạng thái để hiện/ẩn nút đánh giá
-                currentOrder.getOrderId() // Truyền ID đơn để biết đánh giá đơn nào
+                currentOrder.getStatus(),
+                currentOrder.getOrderId()
         );
         recyclerProducts.setAdapter(orderDetailAdapter);
         displayCustomerInfo();
 
         tvOrderStatus.setText("Trạng thái: " + currentOrder.getStatus());
+
         if ("Đã hủy".equalsIgnoreCase(currentOrder.getStatus()) && currentOrder.getCancellationReason() != null && !currentOrder.getCancellationReason().isEmpty()) {
             tvCancellationReason.setText("Lý do: " + currentOrder.getCancellationReason());
             tvCancellationReason.setVisibility(View.VISIBLE);

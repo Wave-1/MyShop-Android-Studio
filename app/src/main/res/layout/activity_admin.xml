@@ -20,10 +20,13 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#FFFFFF"
             android:elevation="3dp"
             android:paddingTop="20dp"
-            android:paddingBottom="12dp">
+            android:paddingBottom="12dp"
+            android:background="@drawable/bg_header_gradient"
+            app:navigationIconTint="?attr/colorOnPrimary"
+            app:titleTextColor="?attr/colorOnPrimary"
+            >
 
             <!-- Nút mở Menu (Hamburger Icon) -->
             <ImageButton
@@ -108,12 +111,9 @@
             app:backgroundTint="#4CAF50"
             app:tint="@android:color/white" />
 
-        <!-- ĐÃ XÓA BottomNavigationView Ở ĐÂY -->
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- 3. PHẦN MENU TRƯỢT (NAVIGATION VIEW) -->
-    <!-- Đây là phần menu sẽ trượt ra từ bên trái -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view_admin"
         android:layout_width="wrap_content"

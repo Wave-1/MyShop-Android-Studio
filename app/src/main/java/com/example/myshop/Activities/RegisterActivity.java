@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myshop.R;
+import com.example.myshop.Util.Constants;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -61,7 +62,8 @@ public class RegisterActivity extends AppCompatActivity {
                         Map<String, Object> user = new HashMap<>();
                         user.put("id", uid);
                         user.put("email", email);
-                        user.put("role", "user"); // mặc định là user, admin set thủ công
+                        user.put("role", "user");
+                        user.put("currentRank", Constants.RANK_NAME_DEFAULT);
 
                         db.collection("users").document(uid)
                                 .set(user)

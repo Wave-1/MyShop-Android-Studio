@@ -171,12 +171,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             if (Constants.ORDER_STATUS_COMPLETED.equalsIgnoreCase(status)) {
                 // TRẠNG THÁI "HOÀN THÀNH": HIỂN THỊ DANH SÁCH SẢN PHẨM ĐỂ ĐÁNH GIÁ
                 actionButtonsLayout.setVisibility(View.GONE);
-//                recyclerProductsToReview.setVisibility(View.VISIBLE);
-
                 ProductsToReviewAdapter productsAdapter = new ProductsToReviewAdapter(order.getItems(), order.getOrderId(), productReviewClickListener);
-//                recyclerProductsToReview.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
-//                recyclerProductsToReview.setAdapter(productsAdapter);
-//                recyclerProductsToReview.setNestedScrollingEnabled(false); // Quan trọng
 
             } else {
                 // CÁC TRẠNG THÁI KHÁC: HIỂN THỊ CÁC NÚT HÀNH ĐỘNG
@@ -189,7 +184,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
                 if (Constants.ORDER_STATUS_PROCESSING.equalsIgnoreCase(status)) {
                     btnCancelOrder.setVisibility(View.VISIBLE);
-                } else if ("Đã giao".equalsIgnoreCase(status)) { // ✅ BƯỚC 5: Sửa lại cách so sánh trạng thái
+                } else if ("Đã giao".equalsIgnoreCase(status)) {
                     btnReturnOrder.setVisibility(View.VISIBLE);
                     btnConfirmReceipt.setVisibility(View.VISIBLE);
                 }

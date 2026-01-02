@@ -9,9 +9,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.bumptech.glide.Glide;
 import com.example.myshop.Util.Constants;
 import com.example.myshop.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -35,6 +37,7 @@ public class AccountActivity extends AppCompatActivity {
     private static final int REQUEST_LOGIN = 100;
     private static final int REQUEST_REGISTER = 101;
     private boolean isAdmin = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,18 +55,10 @@ public class AccountActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         currentUser = mAuth.getCurrentUser();
 
-        View rootLayout = findViewById(R.id.rootLayout);
-
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
-            // Lấy khoảng trống của các thanh hệ thống (status bar, navigation bar)
-            int systemBarsInsetsTop = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-            int systemBarsInsetsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
-
-            // Áp dụng padding cho layout gốc
-            v.setPadding(v.getPaddingLeft(), systemBarsInsetsTop, v.getPaddingRight(), systemBarsInsetsBottom);
-
-            // Trả về insets mặc định để các View con (như AppBarLayout) có thể tự xử lý
-            return WindowInsetsCompat.CONSUMED;
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootLayout), (v, insets) -> {
+            Insets statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars());
+            v.setPadding(0, statusBarInsets.top, 0, 0);
+            return insets;
         });
 
         updateUI();
@@ -80,11 +75,9 @@ public class AccountActivity extends AppCompatActivity {
             Intent intent = null;
             if (id == R.id.nav_home) {
                 startActivity(new Intent(AccountActivity.this, HomeActivity.class));
-//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
                 return true;
             } else if (id == R.id.nav_products) {
                 startActivity(new Intent(AccountActivity.this, ProductActivity.class));
-//                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_in_right);
                 return true;
             }
             if (intent != null) {
@@ -99,6 +92,11 @@ public class AccountActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        layoutUser.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ProfileActivity.class);
+            startActivity(intent);
+        });
+
         btnLogin.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
@@ -183,43 +181,76 @@ public class AccountActivity extends AppCompatActivity {
     }
 
     private void loadUserProfile() {
-        String uid = currentUser.getUid();
+        if (currentUser == null) return;
+            String uid = currentUser.getUid();
+            db.collection("users")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            // Lấy tên người dùng
+                            String name = documentSnapshot.getString("name");
+                            if (name == null || name.isEmpty()) {
+                                name = currentUser.getEmail();
+                            }
+                            tvUsername.setText(name);
+                            // Lấy ảnh đại diện
+                            String avatarUrl = documentSnapshot.getString("profileImage");
+                            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                                Glide.with(AccountActivity.this)
+                                        .load(avatarUrl)
+                                        .placeholder(R.drawable.bg_white_rounded)
+                                        .error(R.drawable.ic_account)
+                                        .into(imgAvatar);
+                            } else {
+                                imgAvatar.setImageResource(R.drawable.ic_account);
+                            }
 
-        db.collection("users")
-                .document(uid)
-                .collection("addresses")
-                .whereEqualTo("default", true)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    String nameFromAddress = null;
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        // Lấy document địa chỉ đầu tiên tìm thấy
-                        nameFromAddress = queryDocumentSnapshots.getDocuments().get(0).getString("name");
-                    }
-                    if (nameFromAddress != null && !nameFromAddress.isEmpty()) {
-                        tvUsername.setText(nameFromAddress);
-                    } else {
-                        String displayName = currentUser.getDisplayName();
-                        if (displayName != null && !displayName.isEmpty()) {
-                            tvUsername.setText(displayName);
                         } else {
                             tvUsername.setText(currentUser.getEmail());
+                            imgAvatar.setImageResource(R.drawable.ic_account);
                         }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    // Xảy ra lỗi khi truy vấn Firestore
-                    Toast.makeText(AccountActivity.this, "Lỗi tải thông tin cá nhân: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    // Hiển thị thông tin dự phòng
-                    tvUsername.setText(currentUser.getEmail());
-                });
+                    }).addOnFailureListener(e -> {
+                        Toast.makeText(this, "Lỗi tải thông tin" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        tvUsername.setText(currentUser.getEmail());
+                        imgAvatar.setImageResource(R.drawable.ic_account);
+                    });
+
+//        db.collection("users")
+//                .document(uid)
+//                .collection("addresses")
+//                .whereEqualTo("default", true)
+//                .limit(1)
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    String nameFromAddress = null;
+//                    if (!queryDocumentSnapshots.isEmpty()) {
+//                        nameFromAddress = queryDocumentSnapshots.getDocuments().get(0).getString("name");
+//                    }
+//                    if (nameFromAddress != null && !nameFromAddress.isEmpty()) {
+//                        tvUsername.setText(nameFromAddress);
+//                    } else {
+//                        String displayName = currentUser.getDisplayName();
+//                        if (displayName != null && !displayName.isEmpty()) {
+//                            tvUsername.setText(displayName);
+//                        } else {
+//                            tvUsername.setText(currentUser.getEmail());
+//                        }
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    // Xảy ra lỗi khi truy vấn Firestore
+//                    Toast.makeText(AccountActivity.this, "Lỗi tải thông tin cá nhân: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+//                    // Hiển thị thông tin dự phòng
+//                    tvUsername.setText(currentUser.getEmail());
+//                });
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        updateUI();
         bottomNav.setSelectedItemId(R.id.nav_account);
     }
 }

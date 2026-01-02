@@ -13,7 +13,9 @@
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@drawable/bg_header_gradient"
+        app:navigationIconTint="?attr/colorOnPrimary"
+        app:titleTextColor="?attr/colorOnPrimary"
         android:elevation="3dp"
         android:paddingTop="20dp"
         android:paddingBottom="12dp"
@@ -37,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Quản lý danh mục"
-            android:textColor="#1C2A44"
+            android:textColor="@color/white"
             android:textSize="22sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -62,7 +64,7 @@
         android:layout_height="wrap_content"
         android:text="Thêm danh mục mới"
         android:layout_margin="16dp"
-        android:backgroundTint="@color/button_primary"
+        android:backgroundTint="@color/btn_app"
         android:textColor="@color/white"
          app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

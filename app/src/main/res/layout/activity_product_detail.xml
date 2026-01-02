@@ -242,7 +242,23 @@
                     android:id="@+id/recyclerReviews"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp" />
+                    tools:listitem="@layout/item_review"
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"/>
+
+                <TextView
+                    android:id="@+id/btnLoadMoreReviews"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="Xem thêm đánh giá"
+                    android:textColor="?attr/colorPrimary"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:visibility="visible"/>
 
                 <!-- =================== SẢN PHẨM LIÊN QUAN =================== -->
                 <TextView

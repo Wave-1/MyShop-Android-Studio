@@ -24,7 +24,9 @@
             app:navigationIcon="@drawable/ic_arrow_back"
             app:title="Sổ địa chỉ"
             app:titleCentered="true"
-            app:titleTextColor="@color/black" />
+            android:background="@drawable/bg_header_gradient"
+            app:navigationIconTint="?attr/colorOnPrimary"
+            app:titleTextColor="?attr/colorOnPrimary"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 

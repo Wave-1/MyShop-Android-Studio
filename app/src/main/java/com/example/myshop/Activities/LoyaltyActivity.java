@@ -46,7 +46,7 @@ public class LoyaltyActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
     private String uid;
-
+    private FirebaseAuth mAuth;
     private List<RankConfigModel> rankConfigList = new ArrayList<>();
 
     @Override
@@ -222,32 +222,86 @@ public class LoyaltyActivity extends AppCompatActivity {
     }
 
     private void loadUserData() {
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        // Nếu người dùng chưa đăng nhập, không thực hiện bất kỳ hành động nào
+        if (currentUser == null) {
+            Toast.makeText(this, "Bạn chưa đăng nhập.", Toast.LENGTH_SHORT).show();
+            // Có thể chuyển về màn hình đăng nhập
+            // startActivity(new Intent(this, LoginActivity.class));
+            // finish();
+            return;
+        }
+        // Gán lại uid để đảm bảo nó không null
+        uid = currentUser.getUid();
+
         progressBarLoading.setVisibility(View.VISIBLE);
         scrollMain.setVisibility(View.GONE);
+
+        // ✅ 2. THAY ĐỔI TRUY VẤN: Lấy thẳng từ document user thay vì sub-collection
+        // Truy vấn này hiệu quả hơn và lấy được tên gốc từ document user
         db.collection("users")
                 .document(uid)
-                .collection("addresses")
-                .whereEqualTo("default", true)
-                .limit(1)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    String nameFromAddress = null;
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        // Lấy document địa chỉ đầu tiên tìm thấy
-                        nameFromAddress = queryDocumentSnapshots.getDocuments().get(0).getString("name");
-                    }
-                    if (nameFromAddress != null && !nameFromAddress.isEmpty()) {
-                        tvUserName.setText(nameFromAddress);
-                    } else {
-                        String displayName = currentUser.getDisplayName();
-                        if (displayName != null && !displayName.isEmpty()) {
-                            tvUserName.setText(displayName);
+                .addOnSuccessListener(userDocument -> {
+                    if (userDocument.exists()) {
+                        String name = userDocument.getString("name");
+                        if (name != null && !name.isEmpty()) {
+                            tvUserName.setText(name);
                         } else {
-                            tvUserName.setText("Người dùng");
+                            // Tên dự phòng là DisplayName từ tài khoản Google/Firebase
+                            String displayName = currentUser.getDisplayName();
+                            if (displayName != null && !displayName.isEmpty()) {
+                                tvUserName.setText(displayName);
+                            } else {
+                                // Tên dự phòng cuối cùng là Email
+                                tvUserName.setText(currentUser.getEmail());
+                            }
                         }
+                    } else {
+                        // Trường hợp không tìm thấy document user
+                        tvUserName.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "Người dùng");
                     }
-                });
 
+                    // ✅ 3. SAU KHI LẤY TÊN THÀNH CÔNG, TIẾP TỤC TẢI CÁC ĐƠN HÀNG
+                    loadUserOrdersAndCalculateRank();
+
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Lỗi tải thông tin người dùng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    progressBarLoading.setVisibility(View.GONE);
+                });
+//        progressBarLoading.setVisibility(View.VISIBLE);
+//        scrollMain.setVisibility(View.GONE);
+//        db.collection("users")
+//                .document(uid)
+//                .collection("addresses")
+//                .whereEqualTo("default", true)
+//                .limit(1)
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    String nameFromAddress = null;
+//                    if (!queryDocumentSnapshots.isEmpty()) {
+//                        // Lấy document địa chỉ đầu tiên tìm thấy
+//                        nameFromAddress = queryDocumentSnapshots.getDocuments().get(0).getString("name");
+//                    }
+//                    if (nameFromAddress != null && !nameFromAddress.isEmpty()) {
+//                        tvUserName.setText(nameFromAddress);
+//                    } else {
+//                        String displayName = currentUser.getDisplayName();
+//                        if (displayName != null && !displayName.isEmpty()) {
+//                            tvUserName.setText(displayName);
+//                        } else {
+//                            tvUserName.setText("Người dùng");
+//                        }
+//                    }
+//                });
+
+
+    }
+
+    private void loadUserOrdersAndCalculateRank() {
         db.collection("users")
                 .document(uid)
                 .collection("orders")

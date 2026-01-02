@@ -2,11 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:id="@+id/rootLayout"
     android:background="#F4F6F8"
+    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".Activities.AddEditAddressActivity">
 
@@ -19,9 +19,11 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/bg_header_gradient"
             app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnPrimary"
             app:title="Địa chỉ mới"
-            app:titleCentered="true" />
+            app:titleTextColor="?attr/colorOnPrimary" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -170,7 +172,7 @@
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="2"
-            android:backgroundTint="#FF5722"
+            android:backgroundTint="@color/btn_app"
             android:text="Hoàn thành"
             android:textSize="16sp"
             app:cornerRadius="28dp" />

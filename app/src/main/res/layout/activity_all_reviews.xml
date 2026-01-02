@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    tools:context=".Activities.AllReviewsActivity">
+
+    <!-- Toolbar ở trên cùng -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title="Tất cả đánh giá"
+        app:navigationIconTint="?attr/colorOnPrimary"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        android:background="@drawable/bg_header_gradient"
+        app:titleTextColor="?attr/colorOnPrimary" />
+
+    <!-- Đường kẻ phân cách -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"/>
+
+    <!-- RecyclerView để hiển thị danh sách -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerAllReviews"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_review" />
+
+    <!-- Dòng chữ hiện khi không có đánh giá (phòng trường hợp) -->
+    <TextView
+        android:id="@+id/tvNoReviewsMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chưa có đánh giá nào."
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+</LinearLayout>

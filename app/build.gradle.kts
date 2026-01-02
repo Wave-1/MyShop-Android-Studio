@@ -45,7 +45,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.google.android.material:material:1.10.0")
-
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
     implementation("com.google.firebase:firebase-analytics")
@@ -57,4 +57,5 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
+    implementation("com.google.android.gms:play-services-wallet:19.4.0")
 }

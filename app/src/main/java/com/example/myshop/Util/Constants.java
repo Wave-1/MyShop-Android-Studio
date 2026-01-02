@@ -8,8 +8,7 @@ public class Constants {
     public static final String ORDER_STATUS_DELIVERED = "Đã giao";
     public static final String ORDER_STATUS_COMPLETED = "Hoàn thành";
     public static final String ORDER_STATUS_CANCELLED = "Đã hủy";
-
-    public static final String RANK_NAME_DEFAULT = "Thành viên mới";
+    public static final String RANK_NAME_DEFAULT = "THÀNH VIÊN MỚI";
     public static final String RANK_NAME_DIAMOND = "KIM CƯƠNG";
     public static final String RANK_NAME_GOLD = "VÀNG";
     public static final String RANK_NAME_SILVER = "BẠC";

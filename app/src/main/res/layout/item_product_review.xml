@@ -1,57 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="6dp"
-    app:cardCornerRadius="12dp">
+    android:background="?attr/selectableItemBackground"
+    android:padding="12dp">
 
-    <RelativeLayout
+    <!-- Ảnh sản phẩm -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/ivProductImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginEnd="12dp"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
+        tools:src="@tools:sample/avatars" />
+
+    <!-- Container chứa thông tin text: Tên, Giá, Số lượng -->
+    <LinearLayout
+        android:id="@+id/productInfoContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivProductImage"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="12dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
-            tools:src="@tools:sample/backgrounds/scenic" />
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@+id/actionContainer"
+        android:layout_toEndOf="@id/ivProductImage"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvProductName"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/ivProductImage"
             android:ellipsize="end"
             android:maxLines="2"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            tools:text="Tên sản phẩm rất dài để test giao diện hiển thị..." />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Áo thun nam Polo cao cấp vải cá sấu co giãn 4 chiều" />
 
         <TextView
-            android:id="@+id/tvPurchaseDate"
+            android:id="@+id/tvProductPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tvProductName"
             android:layout_marginTop="4dp"
-            android:layout_toEndOf="@id/ivProductImage"
-            android:textSize="12sp"
-            tools:text="Ngày mua: 10/11/2025" />
+            android:textColor="#FF5722"
+            android:textSize="14sp"
+            tools:text="150.000 đ" />
 
-        <Button
-            android:id="@+id/btnWriteReview"
-            style="@style/Widget.Material3.Button"
+        <TextView
+            android:id="@+id/tvProductQuantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tvPurchaseDate"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="8dp"
-            android:text="Viết đánh giá"/>
+            android:layout_marginTop="2dp"
+            android:textColor="#757575"
+            android:textSize="12sp"
+            tools:text="Số lượng: 2" />
+    </LinearLayout>
 
-    </RelativeLayout>
-</com.google.android.material.card.MaterialCardView>
+    <!-- Container chứa các nút và trạng thái bên phải -->
+    <LinearLayout
+        android:id="@+id/actionContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:gravity="center_horizontal"
+        android:minWidth="90dp"
+        android:orientation="vertical"
+        android:paddingStart="8dp">
+
+        <!-- Nút "Viết Đánh giá" - Chỉ hiện khi chưa đánh giá -->
+        <Button
+            android:id="@+id/btnReviewProduct"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Đánh giá"
+            android:visibility="visible"
+            tools:visibility="gone" />
+
+        <!-- Trạng thái ĐÃ đánh giá -->
+        <TextView
+            android:id="@+id/tvAlreadyReviewedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đã đánh giá"
+            android:textColor="#4CAF50"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Nút "Xem Lại" - Chỉ hiện khi đã đánh giá -->
+        <Button
+            android:id="@+id/btnViewReview"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Xem Lại"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -74,4 +74,11 @@
     <string name="account_info">Thông tin tài khoản</string>
     <string name="account_change_password">Thay đổi mật khẩu</string>
     <string name="payment_method">Phương thức thanh toán</string>
+    <string name="payments_show_name">Successfully received payment data for %s!</string>
+    <string name="google_pay_status_unavailable">Unfortunately</string>
+    <string name="old_password">Mật khẩu củ\n</string>
+    <string name="new_password">Mật khẩu mới\n</string>
+    <string name="confirm_new_password">Nhập lại mật khẩu\n</string>
+    <string name="change_password_button">Đổi mật khẩu</string>
+    <string name="default_web_client_id">871501851405-2o4r55a81o778qljk07vh95o8ja4699u.apps.googleusercontent.com</string>
 </resources>

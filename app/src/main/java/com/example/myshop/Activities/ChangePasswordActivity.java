@@ -12,16 +12,18 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myshop.R;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.EmailAuthProvider;
 
 public class ChangePasswordActivity extends AppCompatActivity {
 
-    private TextView tvToolbarTitle;
-    private ImageView imgToolbarBack;
-    private EditText edtOldPassword, edtNewPassword, edtConfirmPassword;
-    private Button btnChangePassword;
+    private MaterialToolbar toolbar;
+    private TextInputEditText edtOldPassword, edtNewPassword, edtConfirmPassword;
+    private MaterialButton btnChangePassword;
 
     private FirebaseAuth auth;
     private FirebaseUser user;
@@ -32,8 +34,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         setContentView(R.layout.activity_change_password);
 
         // Ánh xạ View
-        tvToolbarTitle = findViewById(R.id.tv_toolbar_title);
-        imgToolbarBack = findViewById(R.id.img_toolbar_back);
+        toolbar = findViewById(R.id.toolbar);
         edtOldPassword = findViewById(R.id.edt_old_password);
         edtNewPassword = findViewById(R.id.edt_new_password);
         edtConfirmPassword = findViewById(R.id.edt_confirm_password);
@@ -43,15 +44,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
 
-        // Thiết lập tiêu đề Toolbar
-        tvToolbarTitle.setText(getString(R.string.account_change_password));
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        // Nút quay lại
-        imgToolbarBack.setOnClickListener(v -> {
-            Intent intent = new Intent(ChangePasswordActivity.this, SettingsActivity.class);
-            startActivity(intent);
-            finish();
-        });
 
         // Xử lý khi nhấn nút "Thay đổi mật khẩu"
         btnChangePassword.setOnClickListener(v -> handleChangePassword());

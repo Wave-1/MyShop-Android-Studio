@@ -1,83 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
 
-    <!-- 1. Ảnh đại diện (Avatar) -->
-    <!-- Sử dụng CardView để bo tròn ảnh một cách dễ dàng và đẹp mắt -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardAvatar"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <!-- Dòng 1: Avatar, Tên người dùng và Ngày đánh giá -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <ImageView
+        <!-- Ảnh đại diện người dùng (Thêm mới) -->
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivUserAvatar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_user_placeholder"
-            tools:src="@tools:sample/avatars"/>
-    </com.google.android.material.card.MaterialCardView>
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            tools:src="@tools:sample/avatars" />
 
-    <!-- 2. Tên người dùng -->
-    <TextView
-        android:id="@+id/tvUserName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/tvDate"
-        app:layout_constraintStart_toEndOf="@+id/cardAvatar"
-        app:layout_constraintTop_toTopOf="@+id/cardAvatar"
-        tools:text="Trần Trọng Tân" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#8A8A8A"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tvUserName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvUserName"
-        tools:text="17/11/2025" />
+            <!-- Tên người dùng -->
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Nguyễn Văn A" />
 
+            <!-- Ngày đánh giá -->
+            <TextView
+                android:id="@+id/tvReviewDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#757575"
+                android:textSize="12sp"
+                tools:text="17/12/2025" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Dòng 2: RatingBar (Số sao đánh giá) -->
     <RatingBar
         android:id="@+id/ratingBar"
         style="?android:attr/ratingBarStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:isIndicator="true"
         android:numStars="5"
-        android:progressTint="#FFC107"
-        android:stepSize="0.5"
-        app:layout_constraintStart_toStartOf="@+id/tvUserName"
-        app:layout_constraintTop_toBottomOf="@+id/tvUserName"
+        android:theme="@style/RatingBar"
         tools:rating="4.5" />
 
+    <!-- Dòng 3: Nội dung bình luận -->
     <TextView
-        android:id="@+id/tvComment"
-        android:layout_width="0dp"
+        android:id="@+id/tvReviewComment"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:lineSpacingExtra="4dp"
-        android:textColor="#333333"
+        android:textColor="#424242"
         android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardAvatar"
-        tools:text="Sản phẩm rất tuyệt vời, chất lượng âm thanh tốt, bass mạnh. Giao hàng nhanh và đóng gói cẩn thận. Rất đáng tiền!" />
+        tools:text="Sản phẩm rất tốt, đóng gói cẩn thận, giao hàng nhanh. Sẽ tiếp tục ủng hộ shop trong tương lai!" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Dòng 4: RecyclerView cho hình ảnh đánh giá (Thêm mới) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerReviewImages"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:nestedScrollingEnabled="false"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_review_image_display"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+    <!-- Mặc định sẽ là gone, chỉ hiện khi có ảnh -->
+
+    <!-- Dòng kẻ phân cách giữa các review -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="#F0F0F0" />
+
+</LinearLayout>

@@ -16,6 +16,7 @@
         android:id="@+id/btnAddAddress"
         android:text="Thêm địa chỉ mới"
         android:layout_marginTop="8dp"
+        android:backgroundTint="@color/btn_app"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

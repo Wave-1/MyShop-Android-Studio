@@ -19,9 +19,11 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnPrimary"
+            android:background="@drawable/bg_header_gradient"
             app:title="Thanh Toán"
             app:titleCentered="true"
-            app:titleTextColor="@color/black" />
+            app:titleTextColor="?attr/colorOnPrimary" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -387,5 +389,7 @@
             android:textColor="#fff"
             android:textSize="16sp"
             android:textAllCaps="false" />
+
     </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

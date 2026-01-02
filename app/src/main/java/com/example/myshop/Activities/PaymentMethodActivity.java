@@ -2,58 +2,67 @@ package com.example.myshop.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.example.myshop.Adapters.PaymentMethodAdapter;
-import com.example.myshop.Models.PaymentMethod;
+
 import com.example.myshop.R;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PaymentMethodActivity extends AppCompatActivity {
 
-    private List<PaymentMethod> listPayment = new ArrayList<>();
-    private PaymentMethodAdapter adapter;
-    private Toolbar toolbar;
+    private RadioGroup radioGroupPayment;
+    private Button btnConfirm;
+    private String selectedMethod = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_method);
 
-        // 1. Toolbar với nút back
-        toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if(getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Phương thức thanh toán");
+        toolbar.setNavigationOnClickListener(v -> finish());
+
+        radioGroupPayment = findViewById(R.id.radioGroupPayment);
+        btnConfirm = findViewById(R.id.btnConfirmPayment);
+
+        // Lấy phương thức hiện tại được truyền từ Checkout (để check sẵn)
+        String currentMethod = getIntent().getStringExtra("CURRENT_METHOD");
+        if (currentMethod != null) {
+            if (currentMethod.equals("Google Pay")) {
+                radioGroupPayment.check(R.id.rbGooglePay);
+            } else if (currentMethod.equals("Banking")) {
+                radioGroupPayment.check(R.id.rbBanking);
+            } else {
+                radioGroupPayment.check(R.id.rbCOD);
+            }
         }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        // 2. RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.rcv_payment_method);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        btnConfirm.setOnClickListener(v -> {
+            int selectedId = radioGroupPayment.getCheckedRadioButtonId();
 
-        // 3. Dữ liệu
-        listPayment.add(new PaymentMethod(1, "COD", "Thanh toán khi nhận hàng"));
-        listPayment.add(new PaymentMethod(2, "Thẻ tín dụng", "Visa, MasterCard"));
-        listPayment.add(new PaymentMethod(3, "Chuyển khoản", "Ngân hàng Vietcombank"));
-        listPayment.add(new PaymentMethod(4, "ZaloPay", "Thanh toán qua ZaloPay"));
+            if (selectedId == -1) {
+                Toast.makeText(this, "Vui lòng chọn phương thức thanh toán", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        // 4. Adapter
-        adapter = new PaymentMethodAdapter(listPayment, method -> {
-            for (PaymentMethod m : listPayment) m.setSelected(false);
-            method.setSelected(true);
-            adapter.notifyDataSetChanged();
+            if (selectedId == R.id.rbCOD) {
+                selectedMethod = "Thanh toán khi nhận hàng (COD)";
+            } else if (selectedId == R.id.rbGooglePay) {
+                selectedMethod = "Google Pay";
+            } else if (selectedId == R.id.rbBanking) {
+                selectedMethod = "Banking";
+            }
 
-            Intent result = new Intent();
-            result.putExtra("SELECTED_PAYMENT_METHOD", method.getName());
-            setResult(RESULT_OK, result);
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra("SELECTED_PAYMENT_METHOD", selectedMethod);
+            setResult(RESULT_OK, returnIntent);
             finish();
         });
-
-        recyclerView.setAdapter(adapter);
     }
 }

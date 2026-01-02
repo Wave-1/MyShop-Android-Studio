@@ -2,6 +2,9 @@ package com.example.myshop.Models;
 
 import com.google.firebase.Timestamp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ReviewModel {
 
     private String userId;
@@ -14,12 +17,14 @@ public class ReviewModel {
     private String comment;
     private Timestamp timestamp;
 
+    private List<String> imageUrls;
+
     public ReviewModel() {
     }
 
     public ReviewModel(String userId, String userName, String userAvatar, boolean anonymous,
                        String productId, String orderId,
-                       float rating, String comment, Timestamp timestamp) {
+                       float rating, String comment, Timestamp timestamp, List<String> imageUrls) {
         this.userId = userId;
         this.userName = userName;
         this.userAvatar = userAvatar;
@@ -29,6 +34,7 @@ public class ReviewModel {
         this.rating = rating;
         this.comment = comment;
         this.timestamp = timestamp;
+        this.imageUrls = (imageUrls != null) ? imageUrls : new ArrayList<>();
     }
 
     public String getUserId() {
@@ -101,5 +107,13 @@ public class ReviewModel {
 
     public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 }

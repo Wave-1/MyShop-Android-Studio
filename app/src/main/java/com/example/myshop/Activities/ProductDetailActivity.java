@@ -56,7 +56,9 @@ import java.util.regex.Pattern;
 public class ProductDetailActivity extends AppCompatActivity {
 
     private ImageView imgProduct, ivBack, ivFavorite;
-    private TextView tvProductName, tvProductPrice, tvProductOriginalPrice, tvSalePercent, tvNoReviews;
+    private TextView tvProductName, tvProductPrice,
+            tvProductOriginalPrice, tvSalePercent,
+            tvNoReviews, btnLoadMoreReviews;
     private Button btnAddToCart, btnBuyNow;
 
     private LinearLayout descriptionContainer;
@@ -64,6 +66,11 @@ public class ProductDetailActivity extends AppCompatActivity {
     private String role, productId, userId;
     private ProductAdapter relatedProductsAdapter;
     private ArrayList<ProductModel> relatedProductsList;
+
+    private ArrayList<ReviewModel> allReviewsList = new ArrayList<>(); // Chứa tất cả review
+    private ArrayList<ReviewModel> displayedReviewsList = new ArrayList<>(); // Chứa review đang hiển thị
+    private ReviewAdapter reviewAdapter;
+    private static final int INITIAL_REVIEW_COUNT = 5;
     private TextView tvToolbarTitle;
     private Toolbar toolbar;
     private AppBarLayout appBarLayout;
@@ -91,6 +98,9 @@ public class ProductDetailActivity extends AppCompatActivity {
         imgProduct = findViewById(R.id.imgProduct);
         tvProductName = findViewById(R.id.tvProductName);
         tvProductPrice = findViewById(R.id.tvProductPrice);
+
+        recyclerReviews = findViewById(R.id.recyclerReviews);
+        btnLoadMoreReviews = findViewById(R.id.btnLoadMoreReviews);
 
         descriptionContainer = findViewById(R.id.layout_description_container);
         tvSalePercent = findViewById(R.id.tvSalePercent);
@@ -130,6 +140,11 @@ public class ProductDetailActivity extends AppCompatActivity {
         recyclerRelatedProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         recyclerRelatedProducts.setAdapter(relatedProductsAdapter);
 
+        // Danh sách đánh giá
+        reviewAdapter = new ReviewAdapter(this, displayedReviewsList);
+        recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
+        recyclerReviews.setAdapter(reviewAdapter);
+
         if ("admin".equals(role)) {
             btnAddToCart.setVisibility(View.GONE);
             btnBuyNow.setVisibility(View.GONE);
@@ -138,7 +153,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             btnAddToCart.setVisibility(View.VISIBLE);
             btnBuyNow.setVisibility(View.VISIBLE);
         }
-
+        // --- Sự kiện btnAddToCart, btnBuyNow ---
         if (productId != null) {
             db.collection("products").document(productId).get()
                     .addOnSuccessListener(document -> {
@@ -166,7 +181,6 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                                 loadRelatedProducts(productModel.getCategory(), productModel.getProductId());
 
-                                // TODO: gán sự kiện btnAddToCart, btnBuyNow
                                 btnAddToCart.setOnClickListener(v -> {
                                     String uid = FirebaseAuth.getInstance().getCurrentUser() != null
                                             ? FirebaseAuth.getInstance().getCurrentUser().getUid()
@@ -257,7 +271,8 @@ public class ProductDetailActivity extends AppCompatActivity {
                                                                 Toast.makeText(this, "Lỗi thêm giỏ hàng: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                                             });
                                                 } else {
-                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), productModel.getImage(), finalPrice, 1);                                                    db.collection("users")
+                                                    CartModel cartModel = new CartModel(productModel.getProductId(), productModel.getName(), productModel.getImage(), finalPrice, 1);
+                                                    db.collection("users")
                                                             .document(uid)
                                                             .collection("cart")
                                                             .document(productModel.getProductId())
@@ -283,6 +298,18 @@ public class ProductDetailActivity extends AppCompatActivity {
                             Toast.makeText(this, "Lỗi tải sản phẩm: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                     );
         }
+
+        btnLoadMoreReviews.setOnClickListener(v -> {
+//            displayedReviewsList.clear();
+//            displayedReviewsList.addAll(allReviewsList);
+//            reviewAdapter.notifyDataSetChanged();
+//            btnLoadMoreReviews.setVisibility(View.GONE);
+            // Tạo một Intent để mở AllReviewsActivity
+            Intent intent = new Intent(ProductDetailActivity.this, AllReviewsActivity.class);
+            // Đính kèm productId vào Intent để Activity mới biết cần tải review cho sản phẩm nào
+            intent.putExtra("PRODUCT_ID", productId);
+            startActivity(intent);
+        });
     }
 
     private void checkFavoriteStatus() {
@@ -477,10 +504,10 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
 
-        List<ReviewModel> reviewModelList = new ArrayList<>();
-        ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewModelList);
-        recyclerReviews.setAdapter(reviewAdapter);
-        recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
+//        List<ReviewModel> reviewModelList = new ArrayList<>();
+//        ReviewAdapter reviewAdapter = new ReviewAdapter(this, reviewModelList);
+//        recyclerReviews.setAdapter(reviewAdapter);
+//        recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
 
         db.collection("products")
                 .document(productId)
@@ -488,13 +515,15 @@ public class ProductDetailActivity extends AppCompatActivity {
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    reviewModelList.clear();
+//                    reviewModelList.clear();
+                    allReviewsList.clear();
                     for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                         ReviewModel reviewModel = documentSnapshot.toObject(ReviewModel.class);
-                        reviewModelList.add(reviewModel);
+//                        reviewModelList.add(reviewModel);
+                        allReviewsList.add(reviewModel);
                     }
 
-                    if (reviewModelList.isEmpty()) {
+                    if (allReviewsList.isEmpty()) {
                         tvNoReviews.setVisibility(View.VISIBLE);
                         recyclerReviews.setVisibility(View.GONE);
                     } else {
@@ -502,11 +531,40 @@ public class ProductDetailActivity extends AppCompatActivity {
                         recyclerReviews.setVisibility(View.VISIBLE);
                         reviewAdapter.notifyDataSetChanged();
                     }
+                    updateReviewDisplay();
                 })
                 .addOnFailureListener(command -> {
                     Toast.makeText(this, "Lỗi tải danh sách đánh giá", Toast.LENGTH_SHORT).show();
                 });
     }
+
+    private void updateReviewDisplay() {
+        displayedReviewsList.clear();
+
+        if (allReviewsList.isEmpty()) {
+            tvNoReviews.setVisibility(View.VISIBLE);
+            recyclerReviews.setVisibility(View.GONE);
+            btnLoadMoreReviews.setVisibility(View.GONE);
+        } else {
+            tvNoReviews.setVisibility(View.GONE);
+            recyclerReviews.setVisibility(View.VISIBLE);
+
+            // Luôn chỉ hiển thị tối đa 5 review
+            int count = Math.min(allReviewsList.size(), INITIAL_REVIEW_COUNT);
+            for (int i = 0; i < count; i++) {
+                displayedReviewsList.add(allReviewsList.get(i));
+            }
+
+            // Hiện nút "Xem thêm" nếu tổng số review lớn hơn 5
+            if (allReviewsList.size() > INITIAL_REVIEW_COUNT) {
+                btnLoadMoreReviews.setVisibility(View.VISIBLE);
+            } else {
+                btnLoadMoreReviews.setVisibility(View.GONE);
+            }
+        }
+        reviewAdapter.notifyDataSetChanged();
+    }
+
 
     private void showProductPrice(ProductModel productModel) {
         double originalPrice = productModel.getPrice();

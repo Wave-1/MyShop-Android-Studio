@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
     android:padding="16dp">
 
     <LinearLayout
@@ -61,7 +62,7 @@
             android:layout_height="wrap_content"
             android:text="Đăng ký"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#FF4081"
+            android:backgroundTint="@color/btn_app"
             android:padding="12dp"
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />

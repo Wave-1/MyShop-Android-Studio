@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:layout_marginEnd="8dp">
+
+    <!-- Ảnh review được chọn -->
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/ivReviewImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
+        tools:src="@tools:sample/backgrounds/scenic" />
+
+    <FrameLayout
+        android:id="@+id/btnDeleteImage"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|end"
+        android:background="@drawable/bg_delete_button_circle"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_close"
+            app:tint="@color/white"
+            android:contentDescription="Xóa ảnh" />
+    </FrameLayout>
+
+</FrameLayout>

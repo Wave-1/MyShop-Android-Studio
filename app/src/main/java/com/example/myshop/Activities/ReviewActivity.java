@@ -79,7 +79,6 @@ public class ReviewActivity extends AppCompatActivity implements ProductsToRevie
         }
         toolbar.setNavigationOnClickListener(v -> finish());
 
-
         currentList = new ArrayList<>();
         pendingList = new ArrayList<>();
         completedList = new ArrayList<>();
@@ -121,7 +120,6 @@ public class ReviewActivity extends AppCompatActivity implements ProductsToRevie
         } else {
             currentList.addAll(completedList);
         }
-        // ✅ BƯỚC 1: Gọi hàm updateEmptyState tại đây
         updateEmptyState(currentList.isEmpty(), isPendingTab);
         adapter.notifyDataSetChanged();
     }
@@ -194,7 +192,6 @@ public class ReviewActivity extends AppCompatActivity implements ProductsToRevie
         }
     }
 
-    // ✅ BƯỚC 3: Sửa lại logic của updateEmptyState
     private void updateEmptyState(boolean isListEmpty, boolean isPendingTab) {
         if (isListEmpty) {
             emptyLayout.setVisibility(View.VISIBLE);
@@ -220,7 +217,6 @@ public class ReviewActivity extends AppCompatActivity implements ProductsToRevie
     public void onProductReviewClick(CartModel product, String orderId) {
         Intent intent = new Intent(this, ProductReviewActivity.class);
         intent.putExtra("PRODUCT_TO_REVIEW", product);
-        // ✅ BƯỚC 2: Dùng getOrderId() để lấy ID đơn hàng đã lưu
         intent.putExtra("ORDER_ID", product.getOrderId());
         startActivityForResult(intent, REVIEW_REQUEST_CODE);
     }

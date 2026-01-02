@@ -38,7 +38,6 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
     @NonNull
     @Override
     public OrderDetailAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Đảm bảo layout này khớp với XML bạn đã sửa (có nút btnReviewProduct)
         View view = LayoutInflater.from(context).inflate(R.layout.item_product_in_order, parent, false);
         return new ViewHolder(view);
     }
@@ -51,8 +50,6 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
         holder.tvProductPrice.setText(String.format(Locale.getDefault(), "%,.0f ₫", item.getPrice()));
         holder.tvProductQuantity.setText("x " + item.getQuantity());
         Glide.with(context).load(item.getImage()).into(holder.ivProductImage);
-
-        // --- XỬ LÝ LOGIC HIỂN THỊ NÚT ĐÁNH GIÁ ---
 
         // Kiểm tra trạng thái "Hoàn thành"
         boolean isCompleted = Constants.ORDER_STATUS_COMPLETED.equalsIgnoreCase(orderStatus);

@@ -222,15 +222,6 @@
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>
 
-<!--    <ProgressBar-->
-<!--        android:id="@+id/progressBar"-->
-<!--        style="?android:attr/progressBarStyle"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_gravity="center"-->
-<!--        android:visibility="gone"-->
-<!--        tools:visibility="visible" />-->
-
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"

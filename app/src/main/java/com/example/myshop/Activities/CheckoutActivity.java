@@ -14,18 +14,30 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.myshop.Adapters.CheckoutAdapter;
+import com.example.myshop.Models.CheckoutViewModel;
 import com.example.myshop.Util.Constants;
 import com.example.myshop.Models.AddressModel;
 import com.example.myshop.Models.CartModel;
 import com.example.myshop.Models.OrderModel;
 import com.example.myshop.Models.VoucherModel;
 import com.example.myshop.R;
+import com.example.myshop.Util.PaymentsUtil;
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.wallet.PaymentData;
+import com.google.android.gms.wallet.button.ButtonOptions;
+import com.google.android.gms.wallet.button.PayButton;
+import com.google.android.gms.wallet.contract.TaskResultContracts;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.*;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.NumberFormat;
 import java.util.*;
@@ -44,6 +56,7 @@ public class CheckoutActivity extends AppCompatActivity {
     private ArrayList<CartModel> checkoutList = new ArrayList<>();
     private CheckoutAdapter adapter;
     private AddressModel selectedAddress;
+    private CheckoutViewModel model;
 
     // Biến xử lý Voucher & Tiền
     private VoucherModel selectedFreeship;
@@ -58,10 +71,33 @@ public class CheckoutActivity extends AppCompatActivity {
     private double shippingFee = 30000;    // Phí ship mặc định
     private double finalAmount = 0;        // Tổng thanh toán cuối cùng
 
+    // Google Pay Launcher
+    private final ActivityResultLauncher<Task<PaymentData>> paymentDataLauncher =
+            registerForActivityResult(new TaskResultContracts.GetPaymentDataResult(), result -> {
+                int statusCode = result.getStatus().getStatusCode();
+                switch (statusCode) {
+                    case CommonStatusCodes.SUCCESS:
+                        handlePaymentSuccess(result.getResult());
+                        break;
+                    //case CommonStatusCodes.CANCELED: The user canceled
+                    case CommonStatusCodes.DEVELOPER_ERROR:
+                        handleError(statusCode, result.getStatus().getStatusMessage());
+                        break;
+                    default:
+                        handleError(statusCode, "Unexpected non API" +
+                                " exception when trying to deliver the task result to an activity!");
+                        break;
+                }
+            });
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checkout);
+
+        // Khởi tạo ViewModel của Google Pay
+        model = new ViewModelProvider(this).get(CheckoutViewModel.class);
+        model.canUseGooglePay.observe(this, this::setGooglePayAvailable);
 
         initViews();
         setupFirebase();
@@ -104,6 +140,25 @@ public class CheckoutActivity extends AppCompatActivity {
 
         recyclerCheckoutItems = findViewById(R.id.recyclerCheckoutItems);
         btnConfirm = findViewById(R.id.btnConfirm);
+
+    }
+
+    private boolean isGooglePayAvailable = false;
+
+    private void setGooglePayAvailable(boolean available) {
+        this.isGooglePayAvailable = available;
+    }
+
+    public void requestPayment(View view) {
+        if (selectedAddress == null) {
+            Toast.makeText(this, "Vui lòng chọn địa chỉ trước khi thanh toán Google Pay", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (finalAmount < 0) finalAmount = 0;
+        long priceForGooglePay = (long) Math.round(finalAmount);
+        // The price provided to the API should include taxes and shipping.
+        final Task<PaymentData> task = model.getLoadPaymentDataTask(priceForGooglePay);
+        task.addOnCompleteListener(paymentDataLauncher::launch);
     }
 
     private void setupFirebase() {
@@ -132,6 +187,7 @@ public class CheckoutActivity extends AppCompatActivity {
 
         layoutPaymentMethod.setOnClickListener(v -> {
             Intent intent = new Intent(this, PaymentMethodActivity.class);
+            intent.putExtra("CURRENT_METHOD", selectedPaymentMethod);
             paymentLauncher.launch(intent);
         });
 
@@ -148,7 +204,19 @@ public class CheckoutActivity extends AppCompatActivity {
             voucherLauncher.launch(intent);
         });
 
-        btnConfirm.setOnClickListener(v -> confirmOrder());
+        btnConfirm.setOnClickListener(v -> {
+            if ("Google Pay".equals(selectedPaymentMethod)) {
+                // Kiểm tra xem máy có hỗ trợ Google Pay không trước khi gọi
+                if (isGooglePayAvailable) {
+                    requestPayment(v);
+                } else {
+                    Toast.makeText(this, "Google Pay chưa sẵn sàng hoặc không được hỗ trợ trên thiết bị này", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                // Các phương thức khác (COD, Banking)
+                confirmOrder();
+            }
+        });
     }
 
     private void setupLaunchers() {
@@ -174,7 +242,14 @@ public class CheckoutActivity extends AppCompatActivity {
                         String method = result.getData().getStringExtra("SELECTED_PAYMENT_METHOD");
                         if (method != null) {
                             selectedPaymentMethod = method;
-                            tvSelectedPaymentMethod.setText(method);
+                            if ("Google Pay".equals(method)) {
+                                tvSelectedPaymentMethod.setText("Google Pay");
+                            } else if ("Banking".equals(method)) {
+                                tvSelectedPaymentMethod.setText("Chuyển khoản ngân hàng / QR");
+                            } else {
+                                tvSelectedPaymentMethod.setText("Thanh toán khi nhận hàng (COD)");
+                            }
+                            updatePaymentButtonVisibility();
                         }
                     }
                 }
@@ -206,6 +281,17 @@ public class CheckoutActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    private void updatePaymentButtonVisibility() {
+        btnConfirm.setVisibility(View.VISIBLE);
+        if ("Google Pay".equals(selectedPaymentMethod)) {
+            btnConfirm.setText("Thanh toán Google Pay");
+        } else if ("Banking".equals(selectedPaymentMethod)) {
+            btnConfirm.setText("Tiếp tục thanh toán");
+        } else {
+            btnConfirm.setText("Đặt hàng");
+        }
     }
 
     private boolean loadProductsFromIntent() {
@@ -515,5 +601,15 @@ public class CheckoutActivity extends AppCompatActivity {
                     Log.e(TAG, "Lỗi khi thực hiện batch commit: ", e);
                     Toast.makeText(this, "Đặt hàng thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void handlePaymentSuccess(PaymentData paymentData) {
+        Toast.makeText(this, "Thanh toán Google Pay thành công!", Toast.LENGTH_SHORT).show();
+        confirmOrder();
+    }
+
+    private void handleError(int statusCode, @Nullable String message) {
+        Log.e("loadPaymentData failed",
+                String.format(Locale.getDefault(), "Error code: %d, Message: %s", statusCode, message));
     }
 }

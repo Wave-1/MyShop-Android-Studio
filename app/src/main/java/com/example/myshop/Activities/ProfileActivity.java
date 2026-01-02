@@ -4,155 +4,245 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
+import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.myshop.R;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.Calendar;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private TextView tvFullName, tvPhone, tvEmail, tvGender, tvBirthday, tvToolbarTitle;
-    private ImageView imgEditName, imgEditPhone, imgEditEmail, imgEditGender, imgEditBirthday, imgToolbarBack;
+    private MaterialToolbar toolbar;
+    private ImageView imgAvatar;
+    private FrameLayout btnChangeAvatar;
+    private ProgressBar progressBar, progressBarAvatar;
+    private View mainContent;
+    private TextView tvFullName, tvGender, tvBirthday, tvPhone, tvEmail;
+    private LinearLayout layoutName, layoutGender, layoutBirthday, layoutPhone, layoutEmail, layoutChangePassword;
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private StorageReference storageReference;
     private String userId;
-    private String addressId; // 🔹 lưu id của document address mặc định
 
-    private View layoutName, layoutPhone, layoutEmail, layoutGender, layoutBirthday, layoutChangePassword;
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    uploadImageToFirebase(uri);
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // TextView
+        toolbar = findViewById(R.id.toolbar);
+        imgAvatar = findViewById(R.id.img_avatar);
+        btnChangeAvatar = findViewById(R.id.btn_change_avatar);
+
+        progressBar = findViewById(R.id.progressBar);
+        mainContent = findViewById(R.id.mainContent);
+        progressBarAvatar = findViewById(R.id.progressBarAvatar);
+
         tvFullName = findViewById(R.id.tv_full_name);
-        tvPhone = findViewById(R.id.tv_phone);
-        tvEmail = findViewById(R.id.tv_email);
         tvGender = findViewById(R.id.tv_gender);
         tvBirthday = findViewById(R.id.tv_birthday);
-        imgToolbarBack = findViewById(R.id.img_toolbar_back);
-        tvToolbarTitle = findViewById(R.id.tv_toolbar_title);
+        tvPhone = findViewById(R.id.tv_phone);
+        tvEmail = findViewById(R.id.tv_email);
 
-        // ImageView
-        imgEditName = findViewById(R.id.img_edit_name);
-        imgEditPhone = findViewById(R.id.img_edit_phone);
-        imgEditEmail = findViewById(R.id.img_edit_email);
-        imgEditGender = findViewById(R.id.img_edit_gender);
-        imgEditBirthday = findViewById(R.id.img_edit_birthday);
-
-        // Layout
         layoutName = findViewById(R.id.layout_name);
-        layoutPhone = findViewById(R.id.layout_phone);
-        layoutEmail = findViewById(R.id.layout_email);
         layoutGender = findViewById(R.id.layout_gender);
         layoutBirthday = findViewById(R.id.layout_birthday);
+        layoutPhone = findViewById(R.id.layout_phone);
+        layoutEmail = findViewById(R.id.layout_email);
         layoutChangePassword = findViewById(R.id.layout_change_password);
 
-        tvToolbarTitle.setText(getString(R.string.account_info));
+        initFirebase();
+        setupToolbar();
+        setupEvents();
 
-        imgToolbarBack.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, SettingsActivity.class);
-            startActivity(intent);
-            finish();
-        });
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+        if (mainContent != null) mainContent.setVisibility(View.GONE);
 
+        loadUserProfile();
+    }
+
+    private void initFirebase() {
+        mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        userId = FirebaseAuth.getInstance().getUid();
+        storageReference = FirebaseStorage.getInstance().getReference();
 
-        if (userId != null) loadUserInfo();
+        if (mAuth.getCurrentUser() != null) {
+            userId = mAuth.getCurrentUser().getUid();
+        } else {
+            Toast.makeText(this, "Vui lòng đăng nhập để tiếp tục", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
 
-        // Gán sự kiện chỉnh sửa
-        View.OnClickListener nameClick = v ->
-                showEditDialog("Cập nhật tên đầy đủ", tvFullName.getText().toString(), "name", tvFullName);
-        imgEditName.setOnClickListener(nameClick);
-        layoutName.setOnClickListener(nameClick);
+    private void setupToolbar() {
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+    }
 
-        View.OnClickListener phoneClick = v ->
-                showEditDialog("Cập nhật số điện thoại", tvPhone.getText().toString(), "phone", tvPhone);
-        imgEditPhone.setOnClickListener(phoneClick);
-        layoutPhone.setOnClickListener(phoneClick);
+    private void setupEvents() {
+        // 1. Đổi Avatar
+        btnChangeAvatar.setOnClickListener(v -> openGallery());
 
-        View.OnClickListener emailClick = v ->
-                showEditDialog("Cập nhật email", tvEmail.getText().toString(), "email", tvEmail);
-        imgEditEmail.setOnClickListener(emailClick);
-        layoutEmail.setOnClickListener(emailClick);
+        // 2. Sửa Tên
+        layoutName.setOnClickListener(v ->
+                showEditDialog("Cập nhật Họ tên", tvFullName.getText().toString(), "name", tvFullName));
 
-        View.OnClickListener genderClick = v -> showGenderDialog();
-        imgEditGender.setOnClickListener(genderClick);
-        layoutGender.setOnClickListener(genderClick);
+        // 3. Sửa Giới tính
+        layoutGender.setOnClickListener(v -> showGenderDialog());
 
-        View.OnClickListener birthdayClick = v -> showBirthDialog();
-        imgEditBirthday.setOnClickListener(birthdayClick);
-        layoutBirthday.setOnClickListener(birthdayClick);
+        // 4. Sửa Ngày sinh
+        layoutBirthday.setOnClickListener(v -> showBirthDialog());
 
+        // 5. Sửa SĐT
+        layoutPhone.setOnClickListener(v ->
+                showEditDialog("Cập nhật SĐT", tvPhone.getText().toString(), "phoneNumber", tvPhone));
+
+        // 6. Đổi Mật khẩu
         layoutChangePassword.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, ChangePasswordActivity.class);
             startActivity(intent);
         });
+        // 7. Email
+        layoutEmail.setOnClickListener(v ->
+                Toast.makeText(this, "Không thể thay đổi Email đăng nhập", Toast.LENGTH_SHORT).show());
     }
 
-    // 🔹 Lấy thông tin từ address mặc định
-    private void loadUserInfo() {
-        db.collection("users").document(userId)
-                .collection("addresses")
-                .whereEqualTo("default", true)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        DocumentSnapshot doc = querySnapshot.getDocuments().get(0);
-                        addressId = doc.getId();
+    // --- FIREBASE ---
+    private void loadUserProfile() {
+        if (userId == null) return;
 
-                        tvFullName.setText(getOrDefault(doc.getString("name")));
-                        tvPhone.setText(getOrDefault(doc.getString("phone")));
-                        tvEmail.setText(getOrDefault(doc.getString("email"))); // nếu có
-                        tvGender.setText(getOrDefault(doc.getString("gender"))); // nếu có
-                        tvBirthday.setText(getOrDefault(doc.getString("birthday"))); // nếu có
-                    } else {
-                        Toast.makeText(this, "Không tìm thấy địa chỉ mặc định", Toast.LENGTH_SHORT).show();
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (mainContent != null) mainContent.setVisibility(View.VISIBLE);
+                    if (documentSnapshot.exists()) {
+                        String name = documentSnapshot.getString("name");
+                        String phone = documentSnapshot.getString("phoneNumber");
+                        String email = documentSnapshot.getString("email");
+                        String gender = documentSnapshot.getString("gender");
+                        String birthday = documentSnapshot.getString("birthday");
+                        String avatarUrl = documentSnapshot.getString("profileImage");
+
+                        tvFullName.setText(name != null && !name.isEmpty() ? name : "Chưa cập nhật");
+                        tvPhone.setText(phone != null && !phone.isEmpty() ? phone : "Chưa cập nhật");
+                        tvEmail.setText(email != null && !email.isEmpty() ? email : mAuth.getCurrentUser().getEmail());
+                        tvGender.setText(gender != null && !gender.isEmpty() ? gender : "Chưa cập nhật");
+                        tvBirthday.setText(birthday != null && !birthday.isEmpty() ? birthday : "Chưa cập nhật");
+
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            Glide.with(this).load(avatarUrl).into(imgAvatar);
+                        }
                     }
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Lỗi tải dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    if (progressBar != null) progressBar.setVisibility(View.GONE);
+                    if (mainContent != null) mainContent.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "Lỗi tải dữ liệu", Toast.LENGTH_SHORT).show();
+                });
     }
 
-    private String getOrDefault(String value) {
-        return (value != null && !value.isEmpty()) ? value : "Chưa thiết lập";
+    private void updateFirestoreField(String field, String value, TextView targetView) {
+        db.collection("users").document(userId)
+                .update(field, value)
+                .addOnSuccessListener(aVoid -> {
+                    if (targetView != null) targetView.setText(value);
+                    Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Cập nhật thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    private void showEditDialog(String title, String currentValue, String field, TextView targetView) {
+    // --- AVATAR UPLOAD ---
+
+    private void openGallery() {
+        pickImageLauncher.launch("image/*");
+    }
+
+    private void uploadImageToFirebase(Uri imageUri) {
+        progressBarAvatar.setVisibility(View.VISIBLE);
+        imgAvatar.setVisibility(View.INVISIBLE);
+        Toast.makeText(this, "Đang tải ảnh lên...", Toast.LENGTH_SHORT).show();
+
+        StorageReference fileRef = storageReference.child("profile_images/" + userId + ".jpg");
+        fileRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String downloadUrl = uri.toString();
+
+                    // Lưu URL vào Firestore
+                    updateFirestoreField("profileImage", downloadUrl, null);
+
+                    // Hiển thị ngay lập tức
+                    progressBarAvatar.setVisibility(View.GONE);
+                    imgAvatar.setVisibility(View.VISIBLE);
+                    Glide.with(ProfileActivity.this).load(downloadUrl).into(imgAvatar);
+                }))
+                .addOnFailureListener(e -> {
+                    progressBarAvatar.setVisibility(View.GONE);
+                    imgAvatar.setVisibility(View.VISIBLE);
+                    Log.e("ProfileActivity", "Error uploading image", e);
+                });
+    }
+
+    private void showEditDialog(String title, String currentValue, String fieldKey, TextView targetView) {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_edit_text);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        }
 
         TextView tvTitle = dialog.findViewById(R.id.tv_title);
         EditText edtValue = dialog.findViewById(R.id.edt_value);
         Button btnConfirm = dialog.findViewById(R.id.btn_confirm);
 
         tvTitle.setText(title);
-        edtValue.setText(currentValue);
+        if (!currentValue.equals("Chưa cập nhật")) {
+            edtValue.setText(currentValue);
+        }
+
+        if ("phoneNumber".equals(fieldKey)) {
+            edtValue.setInputType(InputType.TYPE_CLASS_PHONE);
+        } else {
+            edtValue.setInputType(InputType.TYPE_CLASS_TEXT);
+        }
 
         btnConfirm.setOnClickListener(v -> {
             String newValue = edtValue.getText().toString().trim();
@@ -161,27 +251,17 @@ public class ProfileActivity extends AppCompatActivity {
                 return;
             }
 
-            if (addressId == null) {
-                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
+            if ("phoneNumber".equals(fieldKey) && !Patterns.PHONE.matcher(newValue).matches()) {
+                edtValue.setError("Số điện thoại không hợp lệ");
                 return;
             }
 
-            db.collection("users").document(userId)
-                    .collection("addresses").document(addressId)
-                    .update(field, newValue)
-                    .addOnSuccessListener(aVoid -> {
-                        targetView.setText(newValue);
-                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-
+            updateFirestoreField(fieldKey, newValue, targetView);
             dialog.dismiss();
         });
 
         dialog.show();
     }
-
     private void showGenderDialog() {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -198,36 +278,19 @@ public class ProfileActivity extends AppCompatActivity {
         RadioButton rbOther = dialog.findViewById(R.id.rb_other);
         Button btnConfirm = dialog.findViewById(R.id.btn_confirm_gender);
 
-        String currentGender = tvGender.getText().toString().trim();
-        if (currentGender.equalsIgnoreCase("Nam")) rbMale.setChecked(true);
-        else if (currentGender.equalsIgnoreCase("Nữ")) rbFemale.setChecked(true);
-        else if (currentGender.equalsIgnoreCase("Khác")) rbOther.setChecked(true);
+        String current = tvGender.getText().toString();
+        if (current.equals("Nam")) rbMale.setChecked(true);
+        else if (current.equals("Nữ")) rbFemale.setChecked(true);
+        else if (current.equals("Khác")) rbOther.setChecked(true);
 
         btnConfirm.setOnClickListener(v -> {
             int selectedId = rgGender.getCheckedRadioButtonId();
-            if (selectedId == -1) {
-                Toast.makeText(this, "Vui lòng chọn giới tính", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            if (selectedId == -1) return;
 
             RadioButton selected = dialog.findViewById(selectedId);
             String gender = selected.getText().toString();
 
-            if (addressId == null) {
-                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            db.collection("users").document(userId)
-                    .collection("addresses").document(addressId)
-                    .update("gender", gender)
-                    .addOnSuccessListener(aVoid -> {
-                        tvGender.setText(gender);
-                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-
+            updateFirestoreField("gender", gender, tvGender);
             dialog.dismiss();
         });
 
@@ -237,7 +300,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void showBirthDialog() {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_edit_birth);
+        dialog.setContentView(R.layout.dialog_edit_birth); // Đảm bảo bạn có file layout này
 
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -249,59 +312,28 @@ public class ProfileActivity extends AppCompatActivity {
         NumberPicker npDay = dialog.findViewById(R.id.np_day);
         Button btnConfirm = dialog.findViewById(R.id.btn_confirm_date);
 
+        // Setup DatePicker
         Calendar calendar = Calendar.getInstance();
         int currentYear = calendar.get(Calendar.YEAR);
-
-        npYear.setMinValue(1950);
+        npYear.setMinValue(1900);
         npYear.setMaxValue(currentYear);
         npMonth.setMinValue(1);
         npMonth.setMaxValue(12);
         npDay.setMinValue(1);
         npDay.setMaxValue(31);
 
-        String currentBirth = tvBirthday.getText().toString().trim();
-        if (currentBirth.matches("\\d{2}/\\d{2}/\\d{4}")) {
-            try {
-                String[] parts = currentBirth.split("/");
-                npDay.setValue(Integer.parseInt(parts[0]));
-                npMonth.setValue(Integer.parseInt(parts[1]));
-                npYear.setValue(Integer.parseInt(parts[2]));
-            } catch (Exception e) {
-                npYear.setValue(2000);
-                npMonth.setValue(1);
-                npDay.setValue(1);
-            }
-        } else {
-            npYear.setValue(2000);
-            npMonth.setValue(1);
-            npDay.setValue(1);
-        }
+        // Set default value
+        npYear.setValue(2000);
+        npMonth.setValue(1);
+        npDay.setValue(1);
 
         btnConfirm.setOnClickListener(v -> {
-            int day = npDay.getValue();
-            int month = npMonth.getValue();
-            int year = npYear.getValue();
-
-            String date = String.format("%02d/%02d/%04d", day, month, year);
-
-            if (addressId == null) {
-                Toast.makeText(this, "Không tìm thấy địa chỉ để cập nhật", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            db.collection("users").document(userId)
-                    .collection("addresses").document(addressId)
-                    .update("birthday", date)
-                    .addOnSuccessListener(aVoid -> {
-                        tvBirthday.setText(date);
-                        Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-
+            String date = String.format("%02d/%02d/%04d", npDay.getValue(), npMonth.getValue(), npYear.getValue());
+            updateFirestoreField("birthday", date, tvBirthday);
             dialog.dismiss();
         });
 
         dialog.show();
     }
+
 }

@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#F4F6F8"
     android:fitsSystemWindows="true"
+    android:orientation="vertical"
     tools:context=".Activities.VoucherActivity">
 
     <!-- Toolbar giữ nguyên -->
@@ -15,14 +15,17 @@
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
         app:elevation="2dp">
+
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/bg_header_gradient"
             app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="?attr/colorOnPrimary"
             app:title="Chọn Voucher"
             app:titleCentered="true"
-            app:titleTextColor="@color/black" />
+            app:titleTextColor="?attr/colorOnPrimary" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Nội dung chính có thể cuộn -->
@@ -42,34 +45,37 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
                 <EditText
                     android:id="@+id/etVoucherCode"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="Nhập mã voucher"
                     android:background="@drawable/bg_edit_text"
-                    android:padding="12dp"
-                    android:maxLines="1"/>
+                    android:hint="Nhập mã voucher"
+                    android:maxLines="1"
+                    android:padding="12dp" />
+
                 <Button
                     android:id="@+id/btnApplyVoucher"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:backgroundTint="@color/btn_app"
                     android:layout_marginStart="8dp"
-                    android:text="Áp dụng"/>
+                    android:text="Áp dụng" />
             </LinearLayout>
 
             <!-- PHẦN 1: ƯU ĐÃI PHÍ VẬN CHUYỂN -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
                 android:text="Ưu đãi phí vận chuyển"
-                android:textStyle="bold"
-                android:textSize="16sp"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp"/>
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerFreeship"
@@ -81,22 +87,22 @@
                 android:id="@+id/tvSeeMoreFreeship"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Xem thêm"
                 android:gravity="center"
                 android:padding="8dp"
+                android:text="Xem thêm"
                 android:textColor="@color/purple_500"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <!-- PHẦN 2: MÃ GIẢM GIÁ & HOÀN XU -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mã giảm giá / Hoàn xu"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="@color/black"
                 android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:text="Mã giảm giá / Hoàn xu"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerDiscount"
@@ -108,11 +114,11 @@
                 android:id="@+id/tvSeeMoreDiscount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Xem thêm"
                 android:gravity="center"
                 android:padding="8dp"
+                android:text="Xem thêm"
                 android:textColor="@color/purple_500"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <!-- Loading & Empty State -->
             <ProgressBar
@@ -120,7 +126,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:visibility="gone"/>
+                android:visibility="gone" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -128,15 +134,17 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
         android:background="@color/white"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        android:padding="16dp">
+
         <Button
             android:id="@+id/btnConfirmSelection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/btn_app"
             android:text="Đồng ý"
-            android:textSize="16sp"/>
+            android:textSize="16sp" />
     </LinearLayout>
 
 </LinearLayout>

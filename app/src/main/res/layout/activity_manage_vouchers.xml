@@ -12,7 +12,9 @@
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@drawable/bg_header_gradient"
+        app:navigationIconTint="?attr/colorOnPrimary"
+        app:titleTextColor="?attr/colorOnPrimary"
         android:elevation="3dp"
         android:paddingTop="20dp"
         android:paddingBottom="12dp"
@@ -36,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Quản lý Vouchers"
-            android:textColor="#1C2A44"
+            android:textColor="@color/white"
             android:textSize="22sp"
             android:textStyle="bold" />
     </RelativeLayout>
